@@ -3,7 +3,7 @@ git commit: creates a new branch on whatever branch you are currently checked-ou
 git branch: creates a branch
 
 git checkout: moves what branch you are analyzing/editing
-
+ 
 
 git fetch: obtains all commits/branches from the remote repository
 
