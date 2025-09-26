@@ -1,28 +1,17 @@
-git commit: creates a new branch on whatever branch you are currently checked-out on
+git init            – create a new local repository
+git clone <url>     – copy a remote repo locally
 
-git branch: creates a branch
+git add <file/dir>  – stage changes for commit
+git commit -m ""    – save staged changes with message
+git status          – show staged/unstaged changes
+git log             – view commit history
 
-git checkout: moves what branch you are analyzing/editing
- 
+git branch          – list or create branches
+git checkout <br>   – switch to branch
+git checkout -b <br>    – create a new branch AND switch to it
+git merge <br>      – combine another branch into current
+git rebase <br>     – replay commits on top of another branch
 
-git fetch: obtains all commits/branches from the remote repository
-
-git merge: combines two branches to create one with all changes
-
-git pull: git fetch + git merge (obtains changes from remote reporsitory. 
-Then combines the remote respository with your current local repository.)
-
-git push: move your changes from your local repository to the remote repository (only works if 
-your local repository is updated with the most recent version of the remote repository)
-
-    -u <branch>
-    necessary for first commit in a new branch
-    
-git rebase: useless
-
-
-git add: adds all unstaged changed files
-
-git status: checks the unstaged changed files
-
-git log: can check commit history of each commit
+git fetch           – download remote changes (no merge)
+git pull            – fetch + merge remote changes
+git push [-u <br>]  – upload commits to remote; `-u` sets upstream
