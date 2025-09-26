@@ -1,17 +1,18 @@
-git init            – create a new local repository
-git clone <url>     – copy a remote repo locally
+git init                – create a new local repository
+git clone <url>         – copy a remote repo locally
 
-git add <file/dir>  – stage changes for commit
-git commit -m ""    – save staged changes with message
-git status          – show staged/unstaged changes
-git log             – view commit history
+git add <file/dir>      – stage changes for commit
+git commit -m ""        – save staged changes with message
+git status              – show staged/unstaged changes
+git log                 – view commit history
 
-git branch          – list or create branches
-git checkout <br>   – switch to branch
+git branch              – list or create branches
+git checkout <br>       – switch to branch
 git checkout -b <br>    – create a new branch AND switch to it
-git merge <br>      – combine another branch into current
-git rebase <br>     – replay commits on top of another branch
+git merge <br>          – combine another branch into current
+git rebase <br>         – replay commits on top of another branch
 
-git fetch           – download remote changes (no merge)
-git pull            – fetch + merge remote changes
-git push [-u <br>]  – upload commits to remote; `-u` sets upstream
+git fetch               – download remote changes (no merge)
+git pull                – fetch + merge remote changes
+git push [-u <br>]      – upload commits to remote; `-u` sets upstream
+                          use -u for the first push in a new branch (sets upstream)
