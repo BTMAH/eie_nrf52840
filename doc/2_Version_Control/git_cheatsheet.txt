@@ -1,0 +1,19 @@
+git commit: creates a new branch on whatever branch you are currently checked-out on
+
+git branch: creates a branch
+
+git checkout: moves what branch you are analyzing/editing
+
+
+git fetch: obtains all commits/branches from the remote repository
+
+git merge: combines two branches to create one with all changes
+
+git pull: git fetch + git merge (obtains changes from remote reporsitory. 
+Then combines the remote respository with your current local repository.)
+
+git push: move your changes from your local repository to the remote repository (only works if 
+your local repository is updated with the most recent version of the remote repository)
+
+git rebase: useless
+
