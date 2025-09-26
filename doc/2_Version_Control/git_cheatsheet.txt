@@ -15,5 +15,14 @@ Then combines the remote respository with your current local repository.)
 git push: move your changes from your local repository to the remote repository (only works if 
 your local repository is updated with the most recent version of the remote repository)
 
+    -u <branch>
+    necessary for first commit in a new branch
+    
 git rebase: useless
 
+
+git add: adds all unstaged changed files
+
+git status: checks the unstaged changed files
+
+git log: can check commit history of each commit
