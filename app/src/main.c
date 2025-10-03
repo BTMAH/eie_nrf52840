@@ -42,17 +42,32 @@ int main(void) {
     }
 
     while (1) {
-        gpio_pin_set_dt(&led0, 1);
-        gpio_pin_set_dt(&led3, 1);
-        k_msleep(1000);
-        gpio_pin_set_dt(&led0, 0);
-        gpio_pin_set_dt(&led3, 0);
+        for (int brightness = 0; brightness < 100; brightness++) {
+            gpio_pin_set_dt(&led0, 1);
+            gpio_pin_set_dt(&led1, 1);
+            gpio_pin_set_dt(&led2, 1);
+            gpio_pin_set_dt(&led3, 1);
+            k_busy_wait(brightness * 100);  // ON time
+            gpio_pin_set_dt(&led0, 0);
+            gpio_pin_set_dt(&led1, 0);
+            gpio_pin_set_dt(&led2, 0);
+            gpio_pin_set_dt(&led3, 0);
+            k_busy_wait((100 - brightness) * 100); // OFF time
+        }
 
-        gpio_pin_set_dt(&led1, 1);
-        gpio_pin_set_dt(&led2, 1);
-        k_msleep(1000);
-        gpio_pin_set_dt(&led1, 0);
-        gpio_pin_set_dt(&led2, 0);
+        for (int brightness = 100; brightness > 0; brightness--) {
+            gpio_pin_set_dt(&led0, 1);
+            gpio_pin_set_dt(&led1, 1);
+            gpio_pin_set_dt(&led2, 1);
+            gpio_pin_set_dt(&led3, 1);
+            k_busy_wait(brightness * 100);  // ON time
+            gpio_pin_set_dt(&led0, 0);
+            gpio_pin_set_dt(&led1, 0);
+            gpio_pin_set_dt(&led2, 0);
+            gpio_pin_set_dt(&led3, 0);
+            k_busy_wait((100 - brightness) * 100); // OFF time
+        }
+
     }
     return 0;
 }
