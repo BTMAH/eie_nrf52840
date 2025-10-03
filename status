@@ -1,0 +1,188 @@
+[33mcommit 7815d5a1c297f97caed22f8fa9c640a897ecb4c2[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32membedded_primer[m[33m)[m
+Author: Brandon Mah <brandon.mah@ucalgary.ca>
+Date:   Thu Oct 2 19:00:06 2025 -0600
+
+    Setup project configuration
+
+[33mcommit 3973b1109ce885164d38815ea77f35d0bc212457[m[33m ([m[1;31mupstream/embedded_primer[m[33m)[m
+Author: Andy Smit <awsmit@shaw.ca>
+Date:   Thu Oct 2 18:32:22 2025 -0600
+
+    Create lesson 3 initial state
+
+[33mcommit 5b47d761fa0e3c9016b1df64c37b288f6065aac2[m[33m ([m[1;31mupstream/main[m[33m, [m[1;31mupstream/HEAD[m[33m)[m
+Merge: 42f35c7 9ef37ad
+Author: Andy Smit <awsmit@shaw.ca>
+Date:   Thu Oct 2 18:30:42 2025 -0600
+
+    Merge feature/lesson3-plan into master
+    
+    Feature/lesson3 plan
+
+[33mcommit 9ef37ad8e5ab51276612f8ddcf198b0b58b05796[m[33m ([m[1;31mupstream/feature/lesson3-plan[m[33m)[m
+Author: Andy Smit <awsmit@shaw.ca>
+Date:   Thu Oct 2 18:24:12 2025 -0600
+
+    Reply to feedback on lesson 3 plan
+
+[33mcommit a1d11be830ab56cb2eeaa5d0b61422b146160765[m
+Author: Andy Smit <awsmit@shaw.ca>
+Date:   Thu Oct 2 00:25:09 2025 -0600
+
+    Add lesson 3 introduction section
+
+[33mcommit 0ff11ec6507e2de73023bb018cea267ce8d7b9f5[m
+Author: Andy Smit <awsmit@shaw.ca>
+Date:   Thu Oct 2 00:21:04 2025 -0600
+
+    Remove unnecessary zephyr files
+    
+    Remove unnecessary zephyr files. Verify the application still builds
+    afterwards
+
+[33mcommit f352f29cc702079a1d1e4301f23d3bf8b92e6fe9[m
+Author: Andy Smit <awsmit@shaw.ca>
+Date:   Wed Oct 1 23:16:06 2025 -0600
+
+    Add lesson 3 lesson plan
+    
+    Add lesson plan for the embedded primer
+
+[33mcommit 42f35c75307437f0f6755528fe93d7fa2cb8a6cd[m
+Author: Andy Smit <awsmit@shaw.ca>
+Date:   Mon Sep 29 21:05:35 2025 -0600
+
+    Add instructions to add upstream remote
+
+[33mcommit 3a8ca0dc036f9d0c0af32296ed60a21888f78709[m
+Author: Matthew Allwright <matt.a.4890@gmail.com>
+Date:   Thu Sep 25 20:32:47 2025 -0600
+
+    Add origin to push -u command
+
+[33mcommit 6d8a6f2717f46a8eb76a646092433f0e58701615[m
+Author: Matthew Allwright <matt.a.4890@gmail.com>
+Date:   Thu Sep 25 20:08:47 2025 -0600
+
+    Add name/email config instructions
+
+[33mcommit a4fd200aa2b8da08cd7d99d3a2b0a386926bf6cd[m
+Author: Matthew Allwright <matt.a.4890@gmail.com>
+Date:   Thu Sep 25 20:03:28 2025 -0600
+
+    Add personal access token instructions
+
+[33mcommit ee412964ec03faa84b2e94ca1ea882ef214c3de5[m
+Author: Andy Smit <awsmit@shaw.ca>
+Date:   Thu Sep 25 19:17:57 2025 -0600
+
+    Add .vscode settings folder
+
+[33mcommit 824ddfc782e5750e4aa6e981bca18a0e19cec363[m[33m ([m[1;32mmain[m[33m)[m
+Author: Andy Smit <awsmit@shaw.ca>
+Date:   Thu Sep 25 18:31:18 2025 -0600
+
+    Add vscode install instructions
+
+[33mcommit 9c15084df6b8054a1ab0b6a67ba3eed4be8abc7b[m
+Author: Matthew Allwright <matt.a.4890@gmail.com>
+Date:   Thu Sep 25 00:46:06 2025 -0600
+
+    Add Lesson 2: Version Control
+
+[33mcommit 0c8e01ae0de0275c0f6b39749c81f92341df1828[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m)[m
+Author: Andy Smit <awsmit@shaw.ca>
+Date:   Thu Sep 18 18:20:58 2025 -0600
+
+    Add missing install instructions
+    
+    Add missing install instruction found during testing and fix linux venv
+    activate command
+
+[33mcommit 43aaa71414a27a6463a871d644a468bcf8cb8f0a[m
+Author: Andy Smit <awsmit@shaw.ca>
+Date:   Thu Sep 11 18:31:30 2025 -0600
+
+    Convert Tabs to space
+
+[33mcommit 4014b872b8b53fc820d08410b3156beddf14eb52[m
+Author: Andy Smit <awsmit@shaw.ca>
+Date:   Mon Sep 8 16:26:11 2025 -0600
+
+    Update getting started instructions
+    
+    Fix copy paste error in linux instructions
+
+[33mcommit e40dc20da63dc5c4c2d35cc362db882f2a02615a[m
+Author: Andy Smit <awsmit@shaw.ca>
+Date:   Mon Sep 8 16:23:10 2025 -0600
+
+    Update readme
+    
+    Update readme with EIE specific content and create lesson plan for
+    installation with detailed install instructions
+
+[33mcommit 302345356aef31cf04918453394ee31a3cb3a7c2[m
+Merge: 90839b3 f09179e
+Author: Andy Smit <awsmit@shaw.ca>
+Date:   Mon Sep 8 14:59:24 2025 -0600
+
+    Merge feature/initial-zephyr-integration into main
+
+[33mcommit f09179e69a31b7e35b16c950ee2751a881bc2da4[m
+Author: Andy Smit <awsmit@shaw.ca>
+Date:   Mon Sep 8 14:36:34 2025 -0600
+
+    Fix basic setup instructions following feedback
+
+[33mcommit 6d7e05ad86eae6c202e2365a0129361835798208[m
+Author: Andy Smit <awsmit@shaw.ca>
+Date:   Mon Sep 8 14:35:43 2025 -0600
+
+    Add .cache to gitignore
+
+[33mcommit d27f1d44091e83afe79f9b990e0f135068fb340c[m
+Author: awsmit07 <awsmit@shaw.ca>
+Date:   Mon Sep 8 14:09:51 2025 -0600
+
+    Update readme with build instructions
+
+[33mcommit e41bbaabdcf04ba4cb07ade1bb9d76567338cf6b[m
+Author: awsmit07 <awsmit@shaw.ca>
+Date:   Mon Sep 8 13:55:14 2025 -0600
+
+    Update example application to build for nRF52840
+    
+    Update cmsis version and example application to build for nRF52840dk
+
+[33mcommit 43f924f332741e145f396be2a1c114ca13626cda[m
+Author: awsmit07 <awsmit@shaw.ca>
+Date:   Mon Aug 11 16:01:42 2025 -0600
+
+    Remove github workflow
+    
+    At least for now remove github workflows running automated documentation
+    builds.
+
+[33mcommit 59c4100559f21c8ba9860c660685cc2467c09882[m
+Author: awsmit07 <awsmit@shaw.ca>
+Date:   Mon Aug 11 15:36:18 2025 -0600
+
+    Configure west project
+    
+    Configure west project to include the ARM cmsis and nordic HAL only
+
+[33mcommit fb490c8ffcfd70ec2cc3fefa68dcec9047f4f467[m
+Author: Andy Smit <awsmit@proton.me>
+Date:   Mon Aug 11 14:49:14 2025 -0600
+
+    Pull in zephyr example application
+    
+    Pull in zephyr example application from
+    https://github.com/zephyrproject-rtos/example-application
+
+[33mcommit 90839b303be27979cd879ccd24e58815ee3b1a9d[m
+Author: Embedded in Embedded <eie@embeddedinembedded.com>
+Date:   Tue Jul 22 08:44:44 2025 -0600
+
+    Initial commit
