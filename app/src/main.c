@@ -13,13 +13,15 @@ int main(void) {
         return -1;
     }
 
-    ret - gpio_pin_configure_dt(&led0, GPIO_OUTPUT_ACTIVE);
+    ret = gpio_pin_configure_dt(&led0, GPIO_OUTPUT_ACTIVE);
     if (ret < 0) {
         return ret;
     }
-    
-    while (1) {
 
+    while (1) {
+        gpio_pin_toggle_dt(&led0);
+
+        k_msleep(1000);
     }
     return 0;
 }
