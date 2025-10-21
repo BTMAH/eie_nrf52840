@@ -7,26 +7,21 @@
 #include <zephyr/sys/printk.h>
 #include <inttypes.h>
 
-
 #include "BTN.h"
 #include "LED.h"
 
-#define SLEEP_MS 1
+#define SLEEP_MS  1
 
-int main(void) {
-    if (0 > BTN_init()) {
-        return 0;
-    }
-    if (0 > LED_init()) {
-        return 0;
-    }
+// ---- Configure your password here (bitmask over BTN2..BTN1..BTN0) ----
+// e.g., 0b101 means BTN2 and BTN0 must be pressed sometime before ENTER.
+#define PASS_MASK  0b101
 
-    while (1) {
-        if (BTN_check_clear_pressed(BTN0)) {
-            LED_toggle(LED0);
-            printk("Button 0 pressed!\n");
-        }
-        k_msleep(SLEEP_MS);
-    }
-    return 0;
-}
+typedef enum {
+    STATE_LOCKED = 0,     // LED0 ON, waiting for any of BTN0..BTN2 to begin entry
+    STATE_ENTRY,          // collecting presses on BTN0..BTN2 until BTN3 (Enter)
+    STATE_RESULT_WAIT,    // print result, turn LED0 OFF, then go to WAITING
+    STATE_WAITING         // any button press resets to LOCKED (and clears state)
+} app_state_t;
+
+static inline void reset_to_locked(uint8_t *entry_mask, app_state_t *st)
+{
