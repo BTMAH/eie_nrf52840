@@ -22,18 +22,34 @@ enum system_state {
 };
 typedef enum system_state system_state_t;
 
+// Add the 4-bit counter state
+static uint8_t cnt = 0;
+
+static void show_nibble(uint8_t v) {
+    LED_set(LED0, (v & 0x1) ? LED_ON : LED_OFF);
+    LED_set(LED1, (v & 0x2) ? LED_ON : LED_OFF);
+    LED_set(LED2, (v & 0x4) ? LED_ON : LED_OFF);
+    LED_set(LED3, (v & 0x8) ? LED_ON : LED_OFF);
+}
+
 static void enter_state(system_state_t s) {
     switch(s) {
         case STATE_IDLE:
-            LED_set(LED0, LED_OFF);
+            show_nibble(cnt);
             break;
         
         case STATE_ARMED:
             LED_blink(LED0, LED_1HZ);
+            LED_set(LED1, LED_OFF);
+            LED_set(LED2, LED_OFF);
+            LED_set(LED3, LED_OFF);
             break;
         
         case STATE_ACTIVE:
             LED_set(LED0, LED_ON);
+            LED_set(LED1, LED_OFF);
+            LED_set(LED2, LED_OFF);
+            LED_set(LED3, LED_OFF);
             break;
     }
 }
@@ -55,6 +71,14 @@ int main(void) {
     while (1) {
         bool b0 = BTN_check_clear_pressed(BTN0);
         bool b1 = BTN_check_clear_pressed(BTN1);
+
+        if (0 < b0) {
+            cnt = (uint8_t)((cnt + 1) & 0x0F);
+            if (state == STATE_IDLE) {
+                show_nibble(cnt);
+            }
+            printk("cnt = %u\n", cnt);
+        }
 
         switch (state) {
             case STATE_IDLE:
