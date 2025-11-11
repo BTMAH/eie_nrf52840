@@ -13,95 +13,80 @@
 #include "BTN.h"
 #include "LED.h"
 
-#define SLEEP_MS  1
+#define SLEEP_MS  10
 
-// ---- Configure your password here (bitmask over BTN2..BTN1..BTN0) ----
-// e.g., 0b101 means BTN2 and BTN0 must be pressed sometime before ENTER.
-#define PASS_MASK  0b101u
+enum system_state {
+    STATE_IDLE = 0,
+    STATE_ARMED, 
+    STATE_ACTIVE
+};
+typedef enum system_state system_state_t;
 
-typedef enum {
-    STATE_LOCKED = 0,     // LED0 ON, waiting for any of BTN0..BTN2 to begin entry
-    STATE_ENTRY,          // collecting presses on BTN0..BTN2 until BTN3 (Enter)
-    STATE_RESULT_WAIT,    // print result, turn LED0 OFF, then go to WAITING
-    STATE_WAITING         // any button press resets to LOCKED (and clears state)
-} app_state_t;
-
-static inline bool all_buttons_released(void) {
-    return !BTN_is_pressed(BTN0) &&
-           !BTN_is_pressed(BTN1) &&
-           !BTN_is_pressed(BTN2) &&
-           !BTN_is_pressed(BTN3);
-}
-
-static inline void note_btn_press(uint8_t *mask) {
-    bool changed = false;
-    if (BTN_check_clear_pressed(BTN0)) { *mask |= (1u << 0); changed = true; }
-    if (BTN_check_clear_pressed(BTN1)) { *mask |= (1u << 1); changed = true; }
-    if (BTN_check_clear_pressed(BTN2)) { *mask |= (1u << 2); changed = true; }
-
-static inline void clear_all_latches(void) {
-    for (int i = 0; i < NUM_BTNS; ++i) BTN_clear_pressed((btn_id)i);
-}
-
-static inline void reset_to_locked(uint8_t *entry_mask, app_state_t *st) {
-    *entry_mask = 0u;
-    clear_all_latches();
-    LED_set(LED0, true);
-    *st = STATE_LOCKED;
+static void enter_state(system_state_t s) {
+    switch(s) {
+        case STATE_IDLE:
+            LED_set(LED0, LED_OFF);
+            break;
+        
+        case STATE_ARMED:
+            LED_blink(LED0, LED_1HZ);
+            break;
+        
+        case STATE_ACTIVE:
+            LED_set(LED0, LED_ON);
+            break;
+    }
 }
 
 int main(void) {
-    if (BTN_init() < 0) return 0;
-    if (LED_init() < 0) return 0;
-
-    uint8_t     entry_mask = 0u;
-    app_state_t st = STATE_LOCKED;
-
-    LED_set(LED0, true);
-
-    while (1) {
-        switch (st) {
-
-        case STATE_LOCKED:
-            note_btn_press(&entry_mask);
-            if (entry_mask != 0u) {
-                st = STATE_ENTRY;
-            }
-            break;
-
-        case STATE_ENTRY:
-            note_btn_press(&entry_mask);
-
-            if (BTN_check_clear_pressed(BTN3)) {
-                if (entry_mask == PASS_MASK) {
-                    printk("Correct!\n");
-                } else {
-                    printk("Incorrect!\n");
-                }
-                LED_set(LED0, false);
-                st = STATE_RESULT_WAIT;
-            }
-            break;
-
-        case STATE_RESULT_WAIT:
-            if (all_buttons_released()) {
-                clear_all_latches();
-                st = STATE_WAITING;
-            }
-            break;
-
-        case STATE_WAITING:
-            if (BTN_check_clear_pressed(BTN0) ||
-                BTN_check_clear_pressed(BTN1) ||
-                BTN_check_clear_pressed(BTN2) ||
-                BTN_check_clear_pressed(BTN3)) {
-                reset_to_locked(&entry_mask, &st);
-            }
-            break;
-        }
-
-        k_msleep(SLEEP_MS);
+    if (0 > BTN_init()) {
+        printk("BTN_init failed!\n");
+        return -1;
     }
 
-    return 0;
+    if (0 > LED_init()) {
+        printk("LED_init failed!\n");
+        return -1;
+    }
+
+    system_state_t state = STATE_IDLE;
+    enter_state(state);
+
+    while (1) {
+        bool b0 = BTN_check_clear_pressed(BTN0);
+        bool b1 = BTN_check_clear_pressed(BTN1);
+
+        switch (state) {
+            case STATE_IDLE:
+                if (0 < b0) {
+                    state = STATE_ARMED;
+                    enter_state(state);
+                    printk("-> ARMED\n");
+                }
+                break;
+            
+            case STATE_ARMED:
+                if (0 < b0) {
+                    state = STATE_ACTIVE;
+                    enter_state(state);
+                    printk("-> ACTIVE\n");
+                }
+
+                else if (0 < b1) {
+                    state = STATE_IDLE;
+                    enter_state(state);
+                    printk("-> IDLE\n");
+                }
+                break;
+            
+            case STATE_ACTIVE:
+                if (0 < b1) {
+                    state = STATE_IDLE;
+                    enter_state(state);
+                    printk("-> IDLE\n");
+                }
+                break;
+        }
+        k_msleep(SLEEP_MS);
+    }
 }
