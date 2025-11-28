@@ -24,8 +24,8 @@ typedef enum {
 // Fixed password for Challenge 1: sequence of BTN0, BTN1, BTN2, etc.
 // 0 = BTN0, 1 = BTN1, 2 = BTN2
 
-static const uint8_t password[] = {0, 1, 2, 1};
-static const uint8_t password_len = 4;
+static const uint8_t password[] = {0, 1, 2, 1, 0, 2, 1};
+static const uint8_t password_len = 7;
 
 // Buffer for the user's current attempt in LOCKED state
 static uint8_t input_buf[MAX_PASSWORD_LEN];
