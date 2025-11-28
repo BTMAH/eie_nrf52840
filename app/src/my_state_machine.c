@@ -242,13 +242,13 @@ static void s1_entry(void *o)
     printk("Enter S1: LED1 blink 4 Hz\n");
 
     // Turn off all LEDs except LED1
-    LED_set(LED0, LED_OFF);
+    LED_set(LED1, LED_OFF);
     LED_set(LED2, LED_OFF);
     LED_set(LED3, LED_OFF);
 
     // LED_blink(led_id, led_frequency) is provided by the EiE LED API.
     // It sets up a non-blocking timer to toggle the LED at the given rate.
-    LED_blink(LED1, LED_4HZ);
+    LED_blink(LED0, LED_4HZ);
 }
 
 static enum smf_state_result s1_run(void *o)
@@ -260,7 +260,10 @@ static enum smf_state_result s1_run(void *o)
         smf_set_state(SMF_CTX(&sm_obj), &sm_states[SM_S2_LEDS_1_3_ON]);
 
     } else if (BTN_check_clear_pressed(BUTTON4)) {
-        // Jump to S4 if Button 4 is pressed
+        // Jump to S0 if Button 4 is pressed
+        smf_set_state(SMF_CTX(&sm_obj), &sm_states[SM_S0_ALL_OFF]);
+    } else if (BTN_check_clear_pressed(BUTTON3)) {
+        // Button 3 -> S4
         smf_set_state(SMF_CTX(&sm_obj), &sm_states[SM_S4_ALL_BLINK_16HZ]);
     }
 
