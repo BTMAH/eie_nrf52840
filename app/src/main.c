@@ -15,43 +15,54 @@
 
 #define SLEEP_MS  10
 
-enum system_state {
-    STATE_IDLE = 0,
-    STATE_ARMED, 
-    STATE_ACTIVE
-};
-typedef enum system_state system_state_t;
+typedef enum {
+    STATE_LOCKED,       // LED0 ON, entering password
+    STATE_WAITING       // result shown, waiting for any button to reset
+} app_state_t;
 
-// Add the 4-bit counter state
-static uint8_t cnt = 0;
+#define MAX_PASSWORD_LEN 16
+// Fixed password for Challenge 1: sequence of BTN0, BTN1, BTN2, etc.
+// 0 = BTN0, 1 = BTN1, 2 = BTN2
 
-static void show_nibble(uint8_t v) {
-    LED_set(LED0, (v & 0x1) ? LED_ON : LED_OFF);
-    LED_set(LED1, (v & 0x2) ? LED_ON : LED_OFF);
-    LED_set(LED2, (v & 0x4) ? LED_ON : LED_OFF);
-    LED_set(LED3, (v & 0x8) ? LED_ON : LED_OFF);
+static const uint8_t password[] = {0, 1, 2, 1};
+static const uint8_t password_len = 4;
+
+// Buffer for the user's current attempt in LOCKED state
+static uint8_t input_buf[MAX_PASSWORD_LEN];
+static uint8_t input_len = 0;
+
+// Helper: add a button "value" (0/1/2) to input buffer safely
+static void buffer_add(uint8_t value) {
+    if (input_len >= MAX_PASSWORD_LEN) {
+        printk("Input buffer full, ignoring BTN%u\n", value);
+        return;
+    }
+
+    input_buf[input_len] = value;
+    input_len++;
+
+    printk("Added BTN%u, length now %u\n", value, input_len);
 }
 
-static void enter_state(system_state_t s) {
-    switch(s) {
-        case STATE_IDLE:
-            show_nibble(cnt);
-            break;
-        
-        case STATE_ARMED:
-            LED_blink(LED0, LED_1HZ);
-            LED_set(LED1, LED_OFF);
-            LED_set(LED2, LED_OFF);
-            LED_set(LED3, LED_OFF);
-            break;
-        
-        case STATE_ACTIVE:
-            LED_set(LED0, LED_ON);
-            LED_set(LED1, LED_OFF);
-            LED_set(LED2, LED_OFF);
-            LED_set(LED3, LED_OFF);
-            break;
+static bool check_password(void) {
+    if (input_len != password_len) {
+        return false;
     }
+
+    for (uint8_t i = 0; i < password_len; i++) {
+        if (input_buf[i] != password[i]) {
+            return false;
+        }
+    }
+    return true;
+}
+
+// Helper: reset to locked state (LED ON, clear input)
+static void go_to_locked(app_state_t *state) {
+    input_len = 0;
+    LED_set(LED0, LED_ON);
+    *state = STATE_LOCKED;
+    printk("Back to LOCKED state\n");
 }
 
 int main(void) {
@@ -65,52 +76,59 @@ int main(void) {
         return -1;
     }
 
-    system_state_t state = STATE_IDLE;
-    enter_state(state);
+    app_state_t state = STATE_LOCKED;
 
+    LED_set(LED0, LED_ON);
+    LED_set(LED1, LED_OFF);
+    LED_set(LED2, LED_OFF);
+    LED_set(LED3, LED_OFF);
+
+    printk("System LOCKED. Enter password with BTN0/BTN1/BTN2, press BTN3 to check.\n");
+    
     while (1) {
+        // Debounce button checks
         bool b0 = BTN_check_clear_pressed(BTN0);
         bool b1 = BTN_check_clear_pressed(BTN1);
-
-        if (0 < b0) {
-            cnt = (uint8_t)((cnt + 1) & 0x0F);
-            if (state == STATE_IDLE) {
-                show_nibble(cnt);
-            }
-            printk("cnt = %u\n", cnt);
-        }
+        bool b2 = BTN_check_clear_pressed(BTN2);
+        bool b3 = BTN_check_clear_pressed(BTN3);
 
         switch (state) {
-            case STATE_IDLE:
-                if (0 < b0) {
-                    state = STATE_ARMED;
-                    enter_state(state);
-                    printk("-> ARMED\n");
-                }
-                break;
-            
-            case STATE_ARMED:
-                if (0 < b0) {
-                    state = STATE_ACTIVE;
-                    enter_state(state);
-                    printk("-> ACTIVE\n");
+        case STATE_LOCKED:
+            // Record password attempt using BTN0 to BTN2
+            if (b0) {
+                buffer_add(0);
+            }
+            if (b1) {
+                buffer_add(1);
+            }
+            if (b2) {
+                buffer_add(2);
+            }
+
+            // BTN3 = "enter" / check password
+            if(b3) {
+                bool ok = check_password();
+                if (ok) {
+                    printk("Correct!\n");
+                } else {
+                    printk("Incorrect!\n");
                 }
 
-                else if (0 < b1) {
-                    state = STATE_IDLE;
-                    enter_state(state);
-                    printk("-> IDLE\n");
-                }
-                break;
-            
-            case STATE_ACTIVE:
-                if (0 < b1) {
-                    state = STATE_IDLE;
-                    enter_state(state);
-                    printk("-> IDLE\n");
-                }
-                break;
+                // Move into WAITING state, turn LED0 off
+                LED_set(LED0, LED_OFF);
+                state = STATE_WAITING;
+                printk("WAITING state: press ANY button to reset to LOCKED.\n");
+            }
+            break;
+
+        case STATE_WAITING:
+            // Any button press resets the system to LOCKED
+            if (b0 || b1 || b2 || b3) {
+                go_to_locked(&state);
+            }
+            break;
         }
         k_msleep(SLEEP_MS);
     }
+
 }
