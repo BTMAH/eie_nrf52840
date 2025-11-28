@@ -248,7 +248,7 @@ static void s1_entry(void *o)
 
     // LED_blink(led_id, led_frequency) is provided by the EiE LED API.
     // It sets up a non-blocking timer to toggle the LED at the given rate.
-    LED_BLINK(LED1, LED_4HZ);
+    LED_blink(LED1, LED_4HZ);
 }
 
 static enum smf_state_result s1_run(void *o)
