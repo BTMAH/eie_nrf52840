@@ -1,7 +1,7 @@
 /**
  * @file my_state_machine.c
  *
- * This file implements the 5-state FMS from the diagram:
+ * This file implements the 5-state FSM from the diagram:
  * 
  * S0: all LEDs off
  * S1: LED1 blinks at 4 Hz
@@ -11,7 +11,7 @@
  * 
  */
 
-#include <zephyr/kernel.h)
+#include <zephyr/kernel.h>
 #include <zephyr/sys/printk.h>
 #include <zephyr/smf.h> // SMF types, macros, and functions
 
@@ -62,9 +62,9 @@
  *-----------------------------------------------------------*/
 
 // S0: All LEDs off
-static void s0_entry(void *0);
+static void s0_entry(void *o);
 static enum smf_state_result s0_run(void *o);
-static void s0_exit(void *0);
+static void s0_exit(void *o);
 
 // S1: LED1 blink at 4 Hz
 static void s1_entry(void *o);
@@ -134,11 +134,12 @@ typedef struct {
  * For a flat FSM (no hierarchy), we just pass NULL for parent and initial.
  */
 
-static const struct smf_state sm_states[] {
+static const struct smf_state sm_states[] = {
     [SM_S0_ALL_OFF] = SMF_CREATE_STATE(s0_entry, s0_run, s0_exit, NULL, NULL),
     [SM_S1_LED1_BLINK_4HZ] = SMF_CREATE_STATE(s1_entry, s1_run, s1_exit, NULL, NULL),
-    [SM_S3_LEDS_2_4_ON] = SMF_CREATE_STATE(s2_entry, s2_run, s2_exit, NULL, NULL),
-    [SM_S4_ALL_BLINK_16HZ] = SMF_CREATE_STATE(s3_entry, s3_run, s3_exit, NULL, NULL),
+    [SM_S2_LEDS_1_3_ON] = SMF_CREATE_STATE(s2_entry, s2_run, s2_exit, NULL, NULL),
+    [SM_S3_LEDS_2_4_ON] = SMF_CREATE_STATE(s3_entry, s3_run, s3_exit, NULL, NULL),
+    [SM_S4_ALL_BLINK_16HZ] = SMF_CREATE_STATE(s4_entry, s4_run, s4_exit, NULL, NULL),
 };
 
 /*
@@ -241,9 +242,9 @@ static void s1_entry(void *o)
     printk("Enter S1: LED1 blink 4 Hz\n");
 
     // Turn off all LEDs except LED1
-    LED_SET(LED0, LED_OFF);
-    LED_SET(LED2, LED_OFF);
-    LED_SET(LED3, LED_OFF);
+    LED_set(LED0, LED_OFF);
+    LED_set(LED2, LED_OFF);
+    LED_set(LED3, LED_OFF);
 
     // LED_blink(led_id, led_frequency) is provided by the EiE LED API.
     // It sets up a non-blocking timer to toggle the LED at the given rate.
@@ -289,7 +290,7 @@ static void s2_entry(void *o)
 
 static enum smf_state_result s2_run(void *o)
 {
-    sm_object_t *self = 0;
+    sm_object_t *self = o;
 
     // We assume state_machine_run() is called every 1 ms (TICK_MS),
     // so each time run() executes we add 1 ms to our timer.
