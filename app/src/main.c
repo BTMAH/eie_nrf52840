@@ -54,6 +54,61 @@ typedef struct {
   uint32 breathe_acc_ms;
 } app_t;
 
+//* ----- Helper Functions ----- *//
+static void reset_current_code(app_t *a)
+{
+  a->bit_count = 0;
+  a->current_byte = 0;
+}
+
+static void append_bit(app_t *a, uint8_t bit)
+{
+  if (a->bit_count >= 8) {
+    // If already full, ignore the bits
+    return;
+  }
+  // Take the bits we’ve entered so far, 
+  // shift them left by one, 
+  // and append the new bit (0 or 1) to the right
+  a->current_byte = (uint8_t)((a->current_byte << 1) | (bit & 0x1u));
+  a->bit_count++;
+}
+
+static bool current_code_ready(const app_t *a)
+{
+  return (a->bit_count == 8);
+}
+
+static void blink_feedback_led0(app_t *a)
+{
+  LED_blink(LED0, LED_16HZ);
+  a->led0_fb_ms = FEEDBACK_BLINK_MS;
+}
+
+static void blink_feedback_led1(app_t *a)
+{
+  LED_blink(LED1, LED_16HZ);
+  a->led1_fb_ms = FEEDBACK_BLINK_MS;
+}
+
+static void service_feedback_leds(app_t *a)
+{
+  // Called every tick to end the temporary blink and restore OFF
+  if (a->led0_fb_ms > 0) {
+    a->led0_fb_ms -= TICK_MS;
+    if (a->led0_fb_ms == 0)
+      LED_set(LED0, LED_OFF);
+  }
+
+  if (a->led1_fb_ms > 0) {
+    a->led1_fb_ms -= TICK_MS;
+    if (a->led1_fb_ms == 0)
+      LED_set(LED1, LED_OFF);
+  }
+}
+
+
+
 int main(void) {
 
   if (0 > LED_init()) {
