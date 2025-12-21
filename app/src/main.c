@@ -107,7 +107,38 @@ static void service_feedback_leds(app_t *a)
   }
 }
 
+// Hold BTN0 + BTN1 for 3s anytime --> go to S3
+// Returns true if it "triggered" the transition
+static bool check_hold_to_standby(app_t *a, const struct smf_state *return_state, const struct smf_state *s3_state)
+{
+  if (BTN_is_pressed(BTN0) && BTN_is_pressed(BTN1)) {
+    if (a->both_hold_ms < HOLD_TO_STANDBY_MS) {
+      a->both_hold_ms += TICK_MS;
+    }
+    if (a->both_hold_ms >= HOLD_TO_STANDBY_MS) {
+      a->both_hold_ms = 0;
+      a->prev_state = return_state;
+      smf_set_state(&a->smf, s3_state);
+      return true;
+    }
+  } else {
+    a->both_hold_ms = 0;
+  }
+  return false;
+}
 
+//* ----- SMF state function prototypes ----- *//
+static void s0_entry(void *o);
+static void S0_run(void *o);
+
+static void s1_entry(void *o);
+static void s1_run(void *o);
+
+static void s2_entry(void *o);
+static void s2_run(void *o);
+
+static void s3_entry(void *o);
+static void s3_run(void *o);
 
 int main(void) {
 
