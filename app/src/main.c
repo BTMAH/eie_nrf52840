@@ -4,13 +4,55 @@
 
 #include <inttypes.h>
 
+#include <stdint.h>
+#include <stdbool.h>
+
 #include <zephyr/kernel.h>
 #include <zephyr/sys/printk.h>
+#include <zephyr/smf.h>
 
 #include "BTN.h"
 #include "LED.h"
 
-#define SLEEP_TIME_MS 1
+#define TICK_MS 1u
+#define HOLD_TO_STANDBY_MS 3000u
+
+#define MAX_STR_LEN 64u
+#define FEEDBACK_BLINK_MS 120u
+
+typedef enum {
+  ST_S0 = 0,    // entry state (1hz)
+  ST_S1,        // entry state (4hz)
+  ST_S2,        // send state (16hz)
+  ST_S3         // standby PWM breathing
+} app_state_id_t;
+
+typedef struct {
+  struct smf_ctx smf;   // required by SMF
+
+  // Go back to previous state after S3 return
+  const struct smf_state *prev_state;
+
+  // 3s hold detection
+  uint32_t both_hold_ms;
+
+  // LED0 and LED1 "blink on click" response
+  uint32_t led0_fb_ms;
+  uint32_t led1_fb_ms;
+
+  // Current 8-bit entry
+  uint8_t bit_count;        // 0 -> 8
+  uint8_t current_byte;     // what the bits assemble to
+
+  // Saved string
+  char str[MAX_STR_LEN + 1];
+  uint8_t str_len;
+
+  // PWM breathing for S3
+  uint8_t duty;
+  int8_t duty_dir;
+  uint32 breathe_acc_ms;
+} app_t;
 
 int main(void) {
 
