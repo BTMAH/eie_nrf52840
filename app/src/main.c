@@ -210,6 +210,69 @@ static void s0_run(void *o) {
 
 }
 
+//* ----- S1: 4hz entry ----- *//
+static void s1_entry(void *o) 
+{
+  app_t *a = (app_t *)o;
+  LED_blink(LED3, LED_4HZ);
+  LED_set(LED0, LED_OFF);
+  LED_set(LED1, LED_OFF);
+  LED_set(LED2, LED_OFF);
+
+  reset_current_code(a);
+  a->both_hold_ms = 0;
+
+  printk("S1: Build string. Enter next ASCII (BTN0/BTN1) or BTN2 reset code or BTN3 save --> S2.\n")
+}
+static void s1_run(void *o)
+{
+  app_t *a = (app_t *)o;
+
+  service_feedback_leds(a);
+
+  // global hold-to-standby (S1 -> S3)
+  if (check_hold_to_standby(a, &states[ST_S1], &states[ST_S3])) {
+    return;
+  }
+
+  if (BTN_check_clear_pressed(BTN0)) {
+    append_bit(a, 0);
+    blink_feedback_led0(a);
+    printk("S1: bit = 0, count = %u, byte = 0x%02X\n", a->bit_count, a->current_byte);
+  }
+
+  if (BTN_check_clear_pressed(BTN1)) {
+    append_bit(a, 1);
+    blink_feedback_led1(a);
+    printk("S1: bit = 1, count = %u, byte = 0x%02X\n", a->bit_count, a->current_byte);
+  }
+
+  if (BTN_check_clear_pressed(BTN2)) {
+    reset_current_code(a);
+    printk("S1: reset current code\n");
+  }
+
+  if (BTN_check_clear_pressed(BTN3)) {
+    // save input code and go to S2
+    // if 8-bits are ready, append that char before finalizing.
+    if (current_code_ready(a)) {
+      if (a->str_len < MAX_STR_LEN) {
+        a->str[a->str_len++] = (char)a->current_byte;
+        a->str[a->str_len] = '\0';
+        printk("S1: appended '%c' (0x%02X)\n", a->str[a->str_len - 1], (uint8_t)a->str[a->str_len - 1]);
+      } else {
+        printk("S1: string full, cannot append\n");
+      }
+    } else {
+      printk("S1: finalizing without new char (only %u bits entered)\n", a->bit_count);
+    }
+
+    reset_current_code(a);
+    printk("S1: -> S2 (ready to send). Current string: %s\n", a->str);
+    smf_set_state(&a->smf, &states[ST_S2]);
+  }
+}
+
 int main(void) {
 
   if (0 > LED_init()) {
