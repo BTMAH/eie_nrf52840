@@ -373,23 +373,14 @@ int main(void) {
     return 0;
   }
 
-  uint8_t current_duty_cycle = 0;
-  LED_pwm(LED0, current_duty_cycle);
-  LED_pwm(LED1, current_duty_cycle);
-  LED_pwm(LED2, current_duty_cycle);
-  LED_pwm(LED3, current_duty_cycle);
+  app_t app = {0};
 
-  while(1) {
-    if (BTN_check_clear_pressed(BTN0) || BTN_check_clear_pressed(BTN1) ||
-        BTN_check_clear_pressed(BTN2) || BTN_check_clear_pressed(BTN3)) {
-      current_duty_cycle = (current_duty_cycle >= 100) ? 0 : (current_duty_cycle + 10);
-      printk("Setting all LEDs to %d%% brightness.\n", current_duty_cycle);
-      LED_pwm(LED0, current_duty_cycle);
-      LED_pwm(LED1, current_duty_cycle);
-      LED_pwm(LED2, current_duty_cycle);
-      LED_pwm(LED3, current_duty_cycle);
-    }
-    k_msleep(SLEEP_TIME_MS);
+  // start in S0
+  smf_set_initial(&app.smf, &states[ST_S0]);
+
+  while (1) {
+    smf_run_state(&app.smf);
+    k_msleep(TICK_MS);
   }
 	return 0;
 }
