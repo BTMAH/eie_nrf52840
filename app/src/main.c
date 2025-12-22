@@ -112,6 +112,14 @@ static void service_feedback_leds(app_t *a)
   }
 }
 
+static void flush_all_button_events(void)
+{
+  BTN_check_clear_pressed(BTN0);
+  BTN_check_clear_pressed(BTN1);
+  BTN_check_clear_pressed(BTN2);
+  BTN_check_clear_pressed(BTN3);  
+}
+
 // Hold BTN0 + BTN1 for 3s anytime --> go to S3
 // Returns true if it "triggered" the transition
 static bool check_hold_to_standby(app_t *a, const struct smf_state *return_state, const struct smf_state *s3_state)
@@ -164,6 +172,8 @@ static void s0_entry(void *o)
 
   reset_current_code(a);
   a->both_hold_ms = 0;
+
+  flush_all_button_events();
 
   printk("S0: Enter first ASCII char (BTN0 = 0, BTN1 = 1). BTN2 reset, BTN3 save -> S1.\n");
 }
@@ -226,6 +236,8 @@ static void s1_entry(void *o)
 
   reset_current_code(a);
   a->both_hold_ms = 0;
+
+  flush_all_button_events();
 
   printk("S1: Build string. Enter next ASCII (BTN0/BTN1) or BTN2 reset code or BTN3 save --> S2.\n");
 }
@@ -290,6 +302,8 @@ static void s2_entry(void *o)
 
   a->both_hold_ms = 0;
 
+  flush_all_button_events();
+
   printk("S2: BTN3 sends to serial. BTN2 -> S0.\n");
 }
 
@@ -332,10 +346,7 @@ static void s3_entry(void *o)
   a->s3_armed = false;  // must release first
 
   // Clears any button press events that may already be queued/latched
-  BTN_check_clear_pressed(BTN0);
-  BTN_check_clear_pressed(BTN1);
-  BTN_check_clear_pressed(BTN2);
-  BTN_check_clear_pressed(BTN3);
+  flush_all_button_events();
 
   printk("S3: Standby breathing. Any button press returns to previous state.\n");
 
@@ -350,12 +361,7 @@ static enum smf_state_result s3_run(void *o)
     if (!BTN_is_pressed(BTN0) && !BTN_is_pressed(BTN1) &&
         !BTN_is_pressed(BTN2) && !BTN_is_pressed(BTN3)) {
           a->s3_armed = true;
-
-          BTN_check_clear_pressed(BTN0);
-          BTN_check_clear_pressed(BTN1);
-          BTN_check_clear_pressed(BTN2);
-          BTN_check_clear_pressed(BTN3);
-
+          flush_all_button_events();
           printk("S3: Standby breathing. Release all buttons to arm exit.\n");
         }
   }
