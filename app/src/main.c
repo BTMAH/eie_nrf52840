@@ -92,15 +92,21 @@ static void service_feedback_leds(app_t *a)
 {
   // Called every tick to end the temporary blink and restore OFF
   if (a->led0_fb_ms > 0) {
-    a->led0_fb_ms -= TICK_MS;
-    if (a->led0_fb_ms == 0)
+    if (a->led0_fb_ms <= TICK_MS) {
+      a->led0_fb_ms = 0;
       LED_set(LED0, LED_OFF);
+    } else {
+      a->led0_fb_ms -= TICK_MS;
+    }
   }
 
   if (a->led1_fb_ms > 0) {
-    a->led1_fb_ms -= TICK_MS;
-    if (a->led1_fb_ms == 0)
+    if (a->led1_fb_ms <= TICK_MS) {
+      a->led1_fb_ms = 0;
       LED_set(LED1, LED_OFF);
+    } else {
+      a->led1_fb_ms -= TICK_MS;
+    }
   }
 }
 
