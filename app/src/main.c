@@ -49,6 +49,8 @@ typedef struct {
   uint8_t duty;
   int8_t duty_dir;
   uint32_t breathe_acc_ms;
+  // release to arm S3
+  bool s3_armed;
 } app_t;
 
 //* ----- Helper Functions ----- *//
@@ -132,16 +134,16 @@ static bool check_hold_to_standby(app_t *a, const struct smf_state *return_state
 
 //* ----- SMF state function prototypes ----- *//
 static void s0_entry(void *o);
-static void s0_run(void *o);
+static enum smf_state_result s0_run(void *o);
 
 static void s1_entry(void *o);
-static void s1_run(void *o);
+static enum smf_state_result s1_run(void *o);
 
 static void s2_entry(void *o);
-static void s2_run(void *o);
+static enum smf_state_result s2_run(void *o);
 
 static void s3_entry(void *o);
-static void s3_run(void *o);
+static enum smf_state_result s3_run(void *o);
 
 //* ----- SMF state table ----- *//
 static const struct smf_state states[] = {
@@ -166,7 +168,7 @@ static void s0_entry(void *o)
   printk("S0: Enter first ASCII char (BTN0 = 0, BTN1 = 1). BTN2 reset, BTN3 save -> S1.\n");
 }
 
-static void s0_run(void *o) {
+static enum smf_state_result s0_run(void *o) {
   app_t *a = (app_t *)o;
 
   // global services
@@ -174,7 +176,7 @@ static void s0_run(void *o) {
 
   // global hold-to-standby (S0 --> S3)
   if (check_hold_to_standby(a, &states[ST_S0], &states[ST_S3])) {
-    return;
+    return SMF_EVENT_HANDLED;
   }
 
   if (BTN_check_clear_pressed(BTN0)) {
@@ -197,7 +199,7 @@ static void s0_run(void *o) {
   if (BTN_check_clear_pressed(BTN3)) {
     if (!current_code_ready(a)) {
       printk("S0: need 8 bits before save (currently %u)\n", a->bit_count);
-      return;
+      return SMF_EVENT_HANDLED;
     }
 
     // Save first character into string
@@ -210,7 +212,7 @@ static void s0_run(void *o) {
     reset_current_code(a);
     smf_set_state(&a->smf, &states[ST_S1]);
   }
-
+  return SMF_EVENT_HANDLED;
 }
 
 //* ----- S1: 4hz entry ----- *//
@@ -227,7 +229,7 @@ static void s1_entry(void *o)
 
   printk("S1: Build string. Enter next ASCII (BTN0/BTN1) or BTN2 reset code or BTN3 save --> S2.\n");
 }
-static void s1_run(void *o)
+static enum smf_state_result s1_run(void *o)
 {
   app_t *a = (app_t *)o;
 
@@ -235,7 +237,7 @@ static void s1_run(void *o)
 
   // global hold-to-standby (S1 -> S3)
   if (check_hold_to_standby(a, &states[ST_S1], &states[ST_S3])) {
-    return;
+    return SMF_EVENT_HANDLED;
   }
 
   if (BTN_check_clear_pressed(BTN0)) {
@@ -274,6 +276,7 @@ static void s1_run(void *o)
     printk("S1: -> S2 (ready to send). Current string: %s\n", a->str);
     smf_set_state(&a->smf, &states[ST_S2]);
   }
+  return SMF_EVENT_HANDLED;
 }
 
 //* ----- S2: 16hz entry ----- *//
@@ -290,13 +293,13 @@ static void s2_entry(void *o)
   printk("S2: BTN3 sends to serial. BTN2 -> S0.\n");
 }
 
-static void s2_run(void*o)
+static enum smf_state_result s2_run(void*o)
 {
   app_t *a = (app_t *)o;
 
   // global hold-to-standby (S2 --> S3)
   if (check_hold_to_standby(a, &states[ST_S2], &states[ST_S3])) {
-    return;
+    return SMF_EVENT_HANDLED;
   }
 
   if (BTN_check_clear_pressed(BTN2)) {
@@ -308,6 +311,7 @@ static void s2_run(void*o)
   if (BTN_check_clear_pressed(BTN3)) {
     printk("S2: SEND to serial monitor: %s\n", a->str);
   }
+  return SMF_EVENT_HANDLED;
 }
 
 //* ----- S3: standby PWM breathing ----- *//
@@ -325,23 +329,47 @@ static void s3_entry(void *o)
   a->duty_dir = +1;
   a->breathe_acc_ms = 0;
 
+  a->s3_armed = false;  // must release first
+
+  // Clears any button press events that may already be queued/latched
+  BTN_check_clear_pressed(BTN0);
+  BTN_check_clear_pressed(BTN1);
+  BTN_check_clear_pressed(BTN2);
+  BTN_check_clear_pressed(BTN3);
+
   printk("S3: Standby breathing. Any button press returns to previous state.\n");
 
 }
 
-static void s3_run(void *o)
+static enum smf_state_result s3_run(void *o)
 {
   app_t *a = (app_t *)o;
 
+  // Wait until all buttons are released once
+  if (!a->s3_armed) {
+    if (!BTN_is_pressed(BTN0) && !BTN_is_pressed(BTN1) &&
+        !BTN_is_pressed(BTN2) && !BTN_is_pressed(BTN3)) {
+          a->s3_armed = true;
+
+          BTN_check_clear_pressed(BTN0);
+          BTN_check_clear_pressed(BTN1);
+          BTN_check_clear_pressed(BTN2);
+          BTN_check_clear_pressed(BTN3);
+
+          printk("S3: Standby breathing. Release all buttons to arm exit.\n");
+        }
+  }
+
   // Any button press exits to previous state
-  if (BTN_check_clear_pressed(BTN0) || BTN_check_clear_pressed(BTN1) ||
+  else {
+    if (BTN_check_clear_pressed(BTN0) || BTN_check_clear_pressed(BTN1) ||
       BTN_check_clear_pressed(BTN2) || BTN_check_clear_pressed(BTN3)) {
         const struct smf_state *back = (a->prev_state != NULL) ? a->prev_state : &states[ST_S0];
         printk("S3: exit -> previous state\n");
         smf_set_state(&a->smf, back);
-        return;
+        return SMF_EVENT_HANDLED;
       }
-  
+  }
   // Gently pulse and pace it so it looks smooth
   a->breathe_acc_ms += TICK_MS;
   // update duty every 15 ms
@@ -364,6 +392,7 @@ static void s3_run(void *o)
     LED_pwm(LED2, a->duty);
     LED_pwm(LED3, a->duty);
   }
+  return SMF_EVENT_HANDLED;
 }
 
 //* ----- main ----- *//
