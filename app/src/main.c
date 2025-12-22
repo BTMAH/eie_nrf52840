@@ -273,6 +273,40 @@ static void s1_run(void *o)
   }
 }
 
+//* ----- S2: 16hz entry ----- *//
+static void s2_entry(void *o)
+{
+  app_t *a = (app_t *)o;
+  LED_blink(LED3, LED_16HZ);
+  LED_set(LED0, LED_OFF);
+  LED_set(LED1, LED_OFF);
+  LED_set(LED2, LED_OFF);
+
+  a->both_hold_ms = 0;
+
+  printk("S2: BTN3 sends to serial. BTN2 -> S0.\n");
+}
+
+static void s2_run(void*o)
+{
+  app_t *a = (app_t *)o;
+
+  // global hold-to-standby (S2 --> S3)
+  if (check_hold_to_standby(a, &states[ST_S2], &states[ST_S3])) {
+    return;
+  }
+
+  if (BTN_check_clear_pressed(BTN2)) {
+    printk("S2: -> S0\n");
+    reset_current_code(a);
+    smf_set_state(&a->smf, &states[ST_S0]);
+  }
+
+  if (BTN_check_clear_pressed(BTN3)) {
+    printk("S2: SEND to serial monitor: %s\n", a->str);
+  }
+}
+
 int main(void) {
 
   if (0 > LED_init()) {
