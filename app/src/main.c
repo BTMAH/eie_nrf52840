@@ -1,9 +1,6 @@
 /*
  * main.c
  */
-
-#include <inttypes.h>
-
 #include <stdint.h>
 #include <stdbool.h>
 
@@ -51,7 +48,7 @@ typedef struct {
   // PWM breathing for S3
   uint8_t duty;
   int8_t duty_dir;
-  uint32 breathe_acc_ms;
+  uint32_t breathe_acc_ms;
 } app_t;
 
 //* ----- Helper Functions ----- *//
@@ -129,7 +126,7 @@ static bool check_hold_to_standby(app_t *a, const struct smf_state *return_state
 
 //* ----- SMF state function prototypes ----- *//
 static void s0_entry(void *o);
-static void S0_run(void *o);
+static void s0_run(void *o);
 
 static void s1_entry(void *o);
 static void s1_run(void *o);
@@ -182,7 +179,7 @@ static void s0_run(void *o) {
 
   if (BTN_check_clear_pressed(BTN1)) {
     append_bit(a, 1);
-    blink_feedback_led0(a);
+    blink_feedback_led1(a);
     printk("S0: bit = 1, count = %u, byte = 0x%02X\n", a->bit_count, a->current_byte);
   }
 
@@ -202,7 +199,7 @@ static void s0_run(void *o) {
     a->str[a->str_len++] = (char)a->current_byte;
     a->str[a->str_len] = '\0';
 
-    printk("S0: saved first char '%c' (0x%02X). -> S1\n", a->str[0]. (uint8_t)a->str[0]);
+    printk("S0: saved first char '%c' (0x%02X). -> S1\n", a->str[0], (uint8_t)a->str[0]);
 
     reset_current_code(a);
     smf_set_state(&a->smf, &states[ST_S1]);
@@ -222,7 +219,7 @@ static void s1_entry(void *o)
   reset_current_code(a);
   a->both_hold_ms = 0;
 
-  printk("S1: Build string. Enter next ASCII (BTN0/BTN1) or BTN2 reset code or BTN3 save --> S2.\n")
+  printk("S1: Build string. Enter next ASCII (BTN0/BTN1) or BTN2 reset code or BTN3 save --> S2.\n");
 }
 static void s1_run(void *o)
 {
@@ -314,9 +311,9 @@ static void s3_entry(void *o)
 
   // Stop blink on LED3 and use PWM on all LEDs
   LED_pwm(LED0, 0);
-  LED_pwm(LED0, 1);
-  LED_pwm(LED0, 2);
-  LED_pwm(LED0, 3);
+  LED_pwm(LED1, 0);
+  LED_pwm(LED2, 0);
+  LED_pwm(LED3, 0);
 
   a->duty = 0;
   a->duty_dir = +1;
@@ -328,7 +325,7 @@ static void s3_entry(void *o)
 
 static void s3_run(void *o)
 {
-  app_t = (app_t *)o;
+  app_t *a = (app_t *)o;
 
   // Any button press exits to previous state
   if (BTN_check_clear_pressed(BTN0) || BTN_check_clear_pressed(BTN1) ||
@@ -341,7 +338,7 @@ static void s3_run(void *o)
   
   // Gently pulse and pace it so it looks smooth
   a->breathe_acc_ms += TICK_MS;
-  // update duty every 15 seconds
+  // update duty every 15 ms
   if (a->breathe_acc_ms >= 15u) {
     a->breathe_acc_ms = 0;
 
