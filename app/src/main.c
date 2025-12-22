@@ -307,6 +307,63 @@ static void s2_run(void*o)
   }
 }
 
+//* ----- S3: standby PWM breathing ----- *//
+static void s3_entry(void *o)
+{
+  app_t *a = (app_t *)o;
+
+  // Stop blink on LED3 and use PWM on all LEDs
+  LED_pwm(LED0, 0);
+  LED_pwm(LED0, 1);
+  LED_pwm(LED0, 2);
+  LED_pwm(LED0, 3);
+
+  a->duty = 0;
+  a->duty_dir = +1;
+  a->breathe_acc_ms = 0;
+
+  printk("S3: Standby breathing. Any button press returns to previous state.\n");
+
+}
+
+static void s3_run(void *o)
+{
+  app_t = (app_t *)o;
+
+  // Any button press exits to previous state
+  if (BTN_check_clear_pressed(BTN0) || BTN_check_clear_pressed(BTN1) ||
+      BTN_check_clear_pressed(BTN2) || BTN_check_clear_pressed(BTN3)) {
+        const struct smf_state *back = (a->prev_state != NULL) ? a->prev_state : &states[ST_S0];
+        printk("S3: exit -> previous state\n");
+        smf_set_state(&a->smf, back);
+        return;
+      }
+  
+  // Gently pulse and pace it so it looks smooth
+  a->breathe_acc_ms += TICK_MS;
+  // update duty every 15 seconds
+  if (a->breathe_acc_ms >= 15u) {
+    a->breathe_acc_ms = 0;
+
+    int16_t next = (int16_t)a->duty + a->duty_dir;
+    if (next >= 100) {
+      next = 100;
+      a->duty_dir = -1;
+    } else if (next <= 0) {
+      next = 0;
+      a->duty_dir = +1;
+    }
+
+    a->duty = (uint8_t)next;
+
+    LED_pwm(LED0, a->duty);
+    LED_pwm(LED1, a->duty);
+    LED_pwm(LED2, a->duty);
+    LED_pwm(LED3, a->duty);
+  }
+}
+
+//* ----- main ----- *//
 int main(void) {
 
   if (0 > LED_init()) {
