@@ -140,6 +140,76 @@ static void s2_run(void *o);
 static void s3_entry(void *o);
 static void s3_run(void *o);
 
+//* ----- SMF state table ----- *//
+static const struct smf_state states[] = {
+  [ST_S0] = SMF_CREATE_STATE(s0_entry, s0_run, NULL, NULL, NULL),
+  [ST_S1] = SMF_CREATE_STATE(s1_entry, s1_run, NULL, NULL, NULL),
+  [ST_S2] = SMF_CREATE_STATE(s2_entry, s2_run, NULL, NULL, NULL),
+  [ST_S3] = SMF_CREATE_STATE(s3_entry, s3_run, NULL, NULL, NULL),
+};
+
+//* ----- S0: 1hz entry ----- *//
+static void s0_entry(void *o)
+{
+  app_t *a = (app_t *)o;
+  LED_blink(LED3, LED_1HZ);
+  LED_set(LED0, LED_OFF);
+  LED_set(LED1, LED_OFF);
+  LED_set(LED2, LED_OFF);
+
+  reset_current_code(a);
+  a->both_hold_ms = 0;
+
+  printk("S0: Enter first ASCII char (BTN0 = 0, BTN1 = 1). BTN2 reset, BTN3 save -> S1.\n");
+}
+
+static void s0_run(void *o) {
+  app_t *a = (app_t *)o;
+
+  // global services
+  service_feedback_leds(a);
+
+  // global hold-to-standby (S0 --> S3)
+  if (check_hold_to_standby(a, &states[ST_S0], &states[ST_S3])) {
+    return;
+  }
+
+  if (BTN_check_clear_pressed(BTN0)) {
+    append_bit(a, 0);
+    blink_feedback_led0(a);
+    printk("S0: bit = 0, count = %u, byte = 0x%02X\n", a->bit_count, a->current_byte);
+  }
+
+  if (BTN_check_clear_pressed(BTN1)) {
+    append_bit(a, 1);
+    blink_feedback_led0(a);
+    printk("S0: bit = 1, count = %u, byte = 0x%02X\n", a->bit_count, a->current_byte);
+  }
+
+  if (BTN_check_clear_pressed(BTN2)) {
+    reset_current_code(a);
+    printk("S0: reset current code\n");
+  }
+
+  if (BTN_check_clear_pressed(BTN3)) {
+    if (!current_code_ready(a)) {
+      printk("S0: need 8 bits before save (currently %u)\n", a->bit_count);
+      return;
+    }
+
+    // Save first character into string
+    a->str_len = 0;
+    a->str[a->str_len++] = (char)a->current_byte;
+    a->str[a->str_len] = '\0';
+
+    printk("S0: saved first char '%c' (0x%02X). -> S1\n", a->str[0]. (uint8_t)a->str[0]);
+
+    reset_current_code(a);
+    smf_set_state(&a->smf, &states[ST_S1]);
+  }
+
+}
+
 int main(void) {
 
   if (0 > LED_init()) {
