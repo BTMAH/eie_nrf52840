@@ -19,6 +19,10 @@
 #include <zephyr/settings/settings.h>
 #include <zephyr/sys/printk.h>
 
+#include "LED.h"
+#include <zephyr/sys/util.h>
+
+
 /* MACROS --------------------------------------------------------------------------------------- */
 
 #define BLE_CUSTOM_SERVICE_UUID \
@@ -95,19 +99,35 @@ static ssize_t ble_custom_service_write(struct bt_conn* conn, const struct bt_ga
   uint8_t* value = attr->user_data;
 
   if (offset + len > BLE_CUSTOM_CHARACTERISTIC_MAX_DATA_LENGTH) {
-    printk("[BLE] ble_custom_service_write: Bad offset %d\n", offset + len);
+    printk("[BLE] ble_custom_service_write: Bad offset %u\n", (unsigned)(offset + len));
     return BT_GATT_ERR(BT_ATT_ERR_INVALID_OFFSET);
   }
+  if (len > 0) {
+    memcpy(value + offset, buf, len);
 
-  memcpy(value + offset, buf, len);
-  value[offset + len] = 0;
-
-  printk("[BLE] ble_custom_service_write (%d, %d):", offset, len);
-  for (uint16_t i = 0; i < len; i++) {
-    printk("%s %02X '%c'", i == 0 ? "" : ",", value[offset + i], value[offset + i]);
+    // Null terminate safely (cap at max)
+    uint16_t end = offset + len;
+    if (end > BLE_CUSTOM_CHARACTERISTIC_MAX_DATA_LENGTH) {
+      end = BLE_CUSTOM_CHARACTERISTIC_MAX_DATA_LENGTH;
+    }
+    value[end] = 0;
   }
-  printk("\n");
+  printk("[BLE] ble_custom_service_write (offset=%u, len=%u, flags=0x%02X)\n", offset, len, flags);
+  printk("[BLE] Now stored: '%s'\n", (char *)value);
 
+  // If this is a "prepare write", don't act yet, wait for the execute step
+  if (flags & BT_GATT_WRITE_FLAG_PREPARE) {
+    return len;
+  }
+  // --- Challenge 1: Interpret commands --- //
+  if (strcmp((char *)value, "LED ON") == 0) {
+    LED_set(LED1, LED_ON);
+    printk("[BLE] Command: LED1 ON\n");
+  }
+  else if (strcmp((char *)value, "LED OFF") == 0) {
+    LED_set(LED1, LED_OFF);
+    printk("[BLE] Command: LED1 OFF\n");
+  }
   return len;
 }
 
@@ -120,7 +140,12 @@ static void ble_custom_service_notify() {
 /* MAIN ----------------------------------------------------------------------------------------- */
 
 int main(void) {
-  int err = bt_enable(NULL);
+  int err = LED_init();
+  if (err) {
+    printk("LED init failed (err %d)\n", err);
+    return 0;
+  }
+  err = bt_enable(NULL);
   if (err) {
     printk("Bluetooth init failed (err %d)\n", err);
     return 0;
