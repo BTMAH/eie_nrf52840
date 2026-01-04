@@ -19,10 +19,13 @@
 #include <zephyr/settings/settings.h>
 #include <zephyr/sys/printk.h>
 
+// Part 1
 #include "LED.h"
 #include <zephyr/sys/util.h>
 #include <ctype.h>
 
+// Part 2
+#include "BTN.h"
 
 /* MACROS --------------------------------------------------------------------------------------- */
 
@@ -58,6 +61,8 @@ static const struct bt_data ble_scan_response_data[] = {
 
 static uint8_t ble_custom_characteristic_user_data[BLE_CUSTOM_CHARACTERISTIC_MAX_DATA_LENGTH + 1] =
     {'E', 'i', 'E'};
+
+static int32_t notify_dir = 1; // +1 = up, -1 = down
 
 /* BLE SERVICE SETUP ---------------------------------------------------------------------------- */
 
@@ -139,9 +144,9 @@ static ssize_t ble_custom_service_write(struct bt_conn* conn, const struct bt_ga
 }
 
 static void ble_custom_service_notify() {
-  static uint32_t counter = 0;
+  static int32_t counter = 0;
   bt_gatt_notify(NULL, &ble_custom_service.attrs[2], &counter, sizeof(counter));
-  counter++;
+  counter += notify_dir;
 }
 
 /* MAIN ----------------------------------------------------------------------------------------- */
@@ -150,6 +155,11 @@ int main(void) {
   int err = LED_init();
   if (err) {
     printk("LED init failed (err %d)\n", err);
+    return 0;
+  }
+  err = BTN_init();
+  if (err) {
+    printk("BTN init failed (err %d)\n", err);
     return 0;
   }
   err = bt_enable(NULL);
@@ -170,6 +180,10 @@ int main(void) {
 
   while (1) {
     k_sleep(K_MSEC(1000));
+    if (BTN_check_clear_pressed(BTN1)) {
+      notify_dir = -notify_dir;
+      printk("[BTN] BTN1 pressed -> notify_dir = %d\n", notify_dir);
+    }
     ble_custom_service_notify();
   }
 }
