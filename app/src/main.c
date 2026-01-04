@@ -21,6 +21,7 @@
 
 #include "LED.h"
 #include <zephyr/sys/util.h>
+#include <ctype.h>
 
 
 /* MACROS --------------------------------------------------------------------------------------- */
@@ -118,6 +119,12 @@ static ssize_t ble_custom_service_write(struct bt_conn* conn, const struct bt_ga
   // If this is a "prepare write", don't act yet, wait for the execute step
   if (flags & BT_GATT_WRITE_FLAG_PREPARE) {
     return len;
+  }
+  // Trim trailing whitespace
+  size_t n = strlen((char *)value);
+  while (n > 0 && isspace((unsigned char)value[n - 1])) {
+    value[n - 1] = '\0';
+    n--;
   }
   // --- Challenge 1: Interpret commands --- //
   if (strcmp((char *)value, "LED ON") == 0) {
