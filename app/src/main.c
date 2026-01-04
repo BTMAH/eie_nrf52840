@@ -64,6 +64,8 @@ static uint8_t ble_custom_characteristic_user_data[BLE_CUSTOM_CHARACTERISTIC_MAX
 
 static int32_t notify_dir = 1; // +1 = up, -1 = down
 
+static bool led1_is_on = false;
+
 /* BLE SERVICE SETUP ---------------------------------------------------------------------------- */
 
 BT_GATT_SERVICE_DEFINE(
@@ -93,10 +95,9 @@ static ssize_t ble_custom_service_read(struct bt_conn* conn, const struct bt_gat
                                        void* buf, uint16_t len, uint16_t offset) {
   // Send the data that is stored in the characteristic ("EiE" by default, can change if written to)
   // by fetching it directly from the characteristic object
-  const char* data_to_send_to_connected_device = attr->user_data;
+  const char *status = led1_is_on ? "ON" : "OFF";
 
-  return bt_gatt_attr_read(conn, attr, buf, len, offset, data_to_send_to_connected_device,
-                           strlen(data_to_send_to_connected_device));
+  return bt_gatt_attr_read(conn, attr, buf, len, offset, status, strlen(status));
 }
 
 static ssize_t ble_custom_service_write(struct bt_conn* conn, const struct bt_gatt_attr* attr,
@@ -134,10 +135,12 @@ static ssize_t ble_custom_service_write(struct bt_conn* conn, const struct bt_ga
   // --- Challenge 1: Interpret commands --- //
   if (strcmp((char *)value, "LED ON") == 0) {
     LED_set(LED1, LED_ON);
+    led1_is_on = true;
     printk("[BLE] Command: LED1 ON\n");
   }
   else if (strcmp((char *)value, "LED OFF") == 0) {
     LED_set(LED1, LED_OFF);
+    led1_is_on = false;
     printk("[BLE] Command: LED1 OFF\n");
   }
   return len;
@@ -157,6 +160,8 @@ int main(void) {
     printk("LED init failed (err %d)\n", err);
     return 0;
   }
+  LED_set(LED1, LED_OFF);
+  led1_is_on = false;
   err = BTN_init();
   if (err) {
     printk("BTN init failed (err %d)\n", err);
