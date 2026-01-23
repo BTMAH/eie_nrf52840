@@ -19,6 +19,11 @@
         };
     };
 
+    zephyr,user {
+        dcx_gpios = <&gpio 11 GPIO_ACTIVE_HIGH>;
+    };
+
+
     aliases {
         pwm-led0 = &pwm_led0;
         pwm-led1 = &pwm_led1;
@@ -26,7 +31,9 @@
         pwm-led3 = &pwm_led3;
     };
 };
-
+&arduino_spi {
+    cs-gpios = <&gpio 12 GPIO_ACTIVE_LOW>;
+};
 &pinctrl { 
     pwm0_default: pwm0_default {
 		group1 {
