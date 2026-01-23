@@ -7,6 +7,7 @@
 #include <errno.h>
 #include <inttypes.h>
 #include <stddef.h>
+#include <stdlib.h>
 #include <zephyr/bluetooth/bluetooth.h>
 #include <zephyr/bluetooth/conn.h>
 #include <zephyr/bluetooth/gatt.h>
@@ -24,18 +25,19 @@
 
 #define SLEEP_MS 1
 
-// #define BLE_CUSTOM_SERVICE_UUID \
+// #define BLE_CUSTOM_SERVICE_UUID 
 //   BT_UUID_128_ENCODE(0x11111111, 0x1111, 0x1111, 0x1111, 0x111111111111)
-// #define BLE_CUSTOM_CHARACTERISTIC_UUID \
+// #define BLE_CUSTOM_CHARACTERISTIC_UUID 
 //   BT_UUID_128_ENCODE(0x11111111, 0x1111, 0x1111, 0x1111, 0x111111111112)
 
 // #define SERVICE BT_UUID_DECLARE_128(BLE_CUSTOM_SERVICE_UUID)
 // #define CHARACTERISTIC BT_UUID_DECLARE_128(BLE_CUSTOM_CHARACTERISTIC_UUID)
 
 static struct bt_uuid_128 BLE_CUSTOM_SERVICE_UUID =
-    BT_UUID_INIT_128(BT_UUID_128_ENCODE(0x11111111, 0x1111, 0x1111, 0x1111, 0x111111111111));
+    BT_UUID_INIT_128(BT_UUID_128_ENCODE(0x11111111, 0x2222, 0x3333, 0x4444, 0x000000000001ULL));
+
 static struct bt_uuid_128 BLE_CUSTOM_CHARACTERISTIC_UUID =
-    BT_UUID_INIT_128(BT_UUID_128_ENCODE(0x11111111, 0x1111, 0x1111, 0x1111, 0x111111111112));
+    BT_UUID_INIT_128(BT_UUID_128_ENCODE(0x11111111, 0x2222, 0x3333, 0x4444, 0x000000000002ULL));
 
 /* PROTOTYPES ----------------------------------------------------------------------------------- */
 
@@ -60,7 +62,7 @@ static bool ble_get_adv_device_name_cb(struct bt_data* data, void* user_data) {
   if (data->type == BT_DATA_NAME_COMPLETE || data->type == BT_DATA_NAME_SHORTENED) {
     /* Copy the name to the user data buffer */
     memcpy(name, data->data, data->data_len);
-    name[data->data_len] = '\\0'; /* Null-terminate the string */
+    name[data->data_len] = '\0'; /* Null-terminate the string */
     return false;                 /* Stop parsing after finding the name */
   }
 
