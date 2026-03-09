@@ -46,11 +46,6 @@ static lv_obj_t *player_score_label;
 static lv_obj_t *ai_score_label;
 
 /* Game state */
-static ball_t ball;
-static int player_x = (SCREEN_W - PADDLE_W) / 2;
-static int ai_x = (SCREEN_W - PADDLE_W) / 2;
-static int player_score = 0;
-static int ai_score = 0;
 
 static void update_ui_positions(void);
 static void reset_ball(bool toward_player);
