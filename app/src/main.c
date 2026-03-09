@@ -28,7 +28,7 @@
 static const struct gpio_dt_spec dcx_gpio = GPIO_DT_SPEC_GET(ZEPHYR_USER_NODE, dcx_gpios);
 static const struct spi_cs_control cs_ctrl = (struct spi_cs_control) {
   .gpio = GPIO_DT_SPEC_GET(ARDUINO_SPI_NODE, cs_gpios),
-  .delay = 1u,
+  .delay = 0u,
 };
 
 static const struct device *dev = DEVICE_DT_GET(ARDUINO_SPI_NODE);
@@ -42,7 +42,7 @@ static const struct spi_config spi_cfg = {
 };
 
 static void lcd_cmd(uint8_t cmd, struct spi_buf *data) {
-  struct spi_buf cmd_buf = {[0]={.buf=&cmd, .len=1}};
+  struct spi_buf cmd_buf[1] = {[0]={.buf=&cmd, .len=1}};
   struct spi_buf_set cmd_set = {.buffers=cmd_buf, .count=1};
 
   // D/C select must be low to send command
@@ -66,7 +66,7 @@ int main(void) {
   if(!gpio_is_ready_dt(&dcx_gpio)) {
     return 0;
   }
-  if(gpio_pin_configure_dt(&dcx_gpio, GPIO_OUTPUT_LOW) < 0) {
+  if(gpio_pin_configure_dt(&dcx_gpio, GPIO_OUTPUT_LOW)) {
     return 0;
   }
 

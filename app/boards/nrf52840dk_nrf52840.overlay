@@ -20,8 +20,10 @@
     };
 
     zephyr,user {
-        dcx_gpios = <&gpio 11 GPIO_ACTIVE_HIGH>;
+        dcx-gpios = <&gpio1 11 GPIO_ACTIVE_HIGH>;
     };
+
+
 
 
     aliases {
@@ -32,8 +34,9 @@
     };
 };
 &arduino_spi {
-    cs-gpios = <&gpio 12 GPIO_ACTIVE_LOW>;
+cs-gpios = <&gpio1 12 GPIO_ACTIVE_LOW>;
 };
+
 &pinctrl { 
     pwm0_default: pwm0_default {
 		group1 {
