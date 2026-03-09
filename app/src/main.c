@@ -27,6 +27,8 @@
 #define PLAYER_SPEED 10
 #define FRAME_MS 16
 
+#define WIN_SCORE 10
+
 typedef struct {
     int x;
     int y;
@@ -42,6 +44,8 @@ static lv_obj_t *player2_paddle;
 static lv_obj_t *ball_obj;
 static lv_obj_t *player1_score_label;
 static lv_obj_t *player2_score_label;
+static lv_obj_t *winner_label;
+static lv_obj_t *restart_label;
 
 /* Game state */
 static ball_t ball;
@@ -49,11 +53,14 @@ static int player1_x = (SCREEN_W - PADDLE_W) / 2;
 static int player2_x = (SCREEN_W - PADDLE_W) / 2;
 static int player1_score = 0;
 static int player2_score = 0;
+static bool game_over = false;
 
 static void update_ui_positions(void);
 static void reset_ball(bool toward_player1);
 static void update_game(void);
 static void update_score_labels(void);
+static void show_game_over(uint8_t winner);
+static void reset_match(void);
 
 /*----------------------------------------------------------------------------
  * Helper: update score text
@@ -68,6 +75,120 @@ static void update_score_labels(void)
 
     lv_label_set_text(player2_score_label, top_text);
     lv_label_set_text(player1_score_label, bottom_text);
+}
+
+/*----------------------------------------------------------------------------
+ * Helper: reset ball
+ *---------------------------------------------------------------------------*/
+static void reset_ball(bool toward_player1)
+{
+    ball.x = 30;
+    ball.y = (SCREEN_H - BALL_SIZE) / 2;
+    ball.vx = 2;
+
+    if (toward_player1) {
+        ball.vy = 3;
+    } else {
+        ball.vy = -3;
+    }
+}
+
+/*----------------------------------------------------------------------------
+ * Helper: reset full match
+ * BTN0 resets after game over
+ *---------------------------------------------------------------------------*/
+static void reset_match(void)
+{
+    player1_score = 0;
+    player2_score = 0;
+    player1_x = (SCREEN_W - PADDLE_W) / 2;
+    player2_x = (SCREEN_W - PADDLE_W) / 2;
+    game_over = false;
+
+    update_score_labels();
+    reset_ball(true);
+    update_ui_positions();
+
+    lv_obj_add_flag(winner_label, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_add_flag(restart_label, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_clear_flag(player1_paddle, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_clear_flag(player2_paddle, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_clear_flag(ball_obj, LV_OBJ_FLAG_HIDDEN);
+}
+
+/*----------------------------------------------------------------------------
+ * Helper: show game over screen
+ *---------------------------------------------------------------------------*/
+static void show_game_over(uint8_t winner)
+{
+    static char win_text[40];
+
+    game_over = true;
+
+    snprintk(win_text, sizeof(win_text), "Congrats Player %d!", winner);
+    lv_label_set_text(winner_label, win_text);
+
+    lv_obj_clear_flag(winner_label, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_clear_flag(restart_label, LV_OBJ_FLAG_HIDDEN);
+
+    lv_obj_add_flag(player1_paddle, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_add_flag(player2_paddle, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_add_flag(ball_obj, LV_OBJ_FLAG_HIDDEN);
+}
+
+/*----------------------------------------------------------------------------
+ * Helper: push state to LVGL objects
+ *---------------------------------------------------------------------------*/
+static void update_ui_positions(void)
+{
+    lv_obj_set_pos(player1_paddle, player1_x, PLAYER1_Y);
+    lv_obj_set_pos(player2_paddle, player2_x, PLAYER2_Y);
+    lv_obj_set_pos(ball_obj, ball.x, ball.y);
+}
+
+/*----------------------------------------------------------------------------
+ * Main game step
+ * Player 2 (top):    BTN0 left, BTN1 right
+ * Player 1 (bottom): BTN2 left, BTN3 right
+ *---------------------------------------------------------------------------*/
+static void update_game(void)
+{
+    if (game_over) {
+        if (BTN_is_pressed(BTN0)) {
+            k_msleep(150);
+            reset_match();
+        }
+        return;
+    }
+
+    /* Player 2 movement */
+    if (BTN_is_pressed(BTN0) && !BTN_is_pressed(BTN1)) {
+        player2_x -= PLAYER_SPEED;
+    } else if (BTN_is_pressed(BTN1) && !BTN_is_pressed(BTN0)) {
+        player2_x += PLAYER_SPEED;
+    }
+
+    /* Player 1 movement */
+    if (BTN_is_pressed(BTN2) && !BTN_is_pressed(BTN3)) {
+        player1_x -= PLAYER_SPEED;
+    } else if (BTN_is_pressed(BTN3) && !BTN_is_pressed(BTN2)) {
+        player1_x += PLAYER_SPEED;
+    }
+
+    if (player1_x < 0) {
+        player1_x = 0;
+    }
+    if (player1_x > (SCREEN_W - PADDLE_W)) {
+        player1_x = SCREEN_W - PADDLE_W;
+    }
+
+    if (player2_x < 0) {
+        player2_x = 0;
+    }
+    if (player2_x > (SCREEN_W - PADDLE_W)) {
+        player2_x = SCREEN_W - PADDLE_W;
+    }
+
 }
 
 /*----------------------------------------------------------------------------
