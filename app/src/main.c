@@ -21,12 +21,10 @@
 #define PADDLE_H 10
 #define BALL_SIZE 10
 
-#define PLAYER_Y (SCREEN_H - 20)
-#define AI_Y     25
+#define PLAYER1_Y (SCREEN_H - 20)
+#define PLAYER2_Y 25
 
 #define PLAYER_SPEED 10
-#define AI_SPEED     3
-
 #define FRAME_MS 16
 
 typedef struct {
@@ -42,13 +40,18 @@ static const struct device *display_dev;
 static lv_obj_t *player_paddle;
 static lv_obj_t *ai_paddle;
 static lv_obj_t *ball_obj;
-static lv_obj_t *player_score_label;
-static lv_obj_t *ai_score_label;
+static lv_obj_t *player1_score_label;
+static lv_obj_t *player2_score_label;
 
 /* Game state */
+static ball_t ball;
+static int player1_x = (SCREEN_W - PADDLE_W) / 2;
+static int player2_x = (SCREEN_W - PADDLE_W) / 2;
+static int player1_score = 0;
+static int player2_score = 0;
 
 static void update_ui_positions(void);
-static void reset_ball(bool toward_player);
+static void reset_ball(bool toward_player1);
 static void update_game(void);
 static void update_score_labels(void);
 
