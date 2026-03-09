@@ -37,8 +37,8 @@ typedef struct {
 static const struct device *display_dev;
 
 /* LVGL objects */
-static lv_obj_t *player_paddle;
-static lv_obj_t *ai_paddle;
+static lv_obj_t *player1_paddle;
+static lv_obj_t *player2_paddle;
 static lv_obj_t *ball_obj;
 static lv_obj_t *player1_score_label;
 static lv_obj_t *player2_score_label;
@@ -55,6 +55,20 @@ static void reset_ball(bool toward_player1);
 static void update_game(void);
 static void update_score_labels(void);
 
+/*----------------------------------------------------------------------------
+ * Helper: update score text
+ *---------------------------------------------------------------------------*/
+static void update_score_labels(void)
+{
+    static char top_text[24];
+    static char bottom_text[24];
+
+    snprintk(top_text, sizeof(top_text), "P2: %d", player2_score);
+    snprintk(bottom_text, sizeof(bottom_text), "P1: %d", player1_score);
+
+    lv_label_set_text(player2_score_label, top_text);
+    lv_label_set_text(player1_score_label, bottom_text);
+}
 
 /*----------------------------------------------------------------------------
  * Main
@@ -79,8 +93,9 @@ int main(void)
     create_ui();
     display_blanking_off(display_dev);
 
-    printk("Pong starting...\n");
-    printk("BTN0 = left, BTN1 = right\n");
+    printk("2-player Pong starting...\n");
+    printk("P2(top): BTN1 left, BTN2 right\n");
+    printk("P1(bot): BTN3 left, BTN4 right\n");
 
     while (true) {
         update_game();
