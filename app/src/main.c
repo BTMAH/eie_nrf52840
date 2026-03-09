@@ -3,7 +3,7 @@
  */
 
 /* IMPORTS -------------------------------------------------------------------------------------- */
-
+#include <string.h>
 #include <errno.h>
 #include <inttypes.h>
 #include <stddef.h>
@@ -25,19 +25,14 @@
 
 #define SLEEP_MS 1
 
-// #define BLE_CUSTOM_SERVICE_UUID 
-//   BT_UUID_128_ENCODE(0x11111111, 0x1111, 0x1111, 0x1111, 0x111111111111)
-// #define BLE_CUSTOM_CHARACTERISTIC_UUID 
-//   BT_UUID_128_ENCODE(0x11111111, 0x1111, 0x1111, 0x1111, 0x111111111112)
-
 // #define SERVICE BT_UUID_DECLARE_128(BLE_CUSTOM_SERVICE_UUID)
 // #define CHARACTERISTIC BT_UUID_DECLARE_128(BLE_CUSTOM_CHARACTERISTIC_UUID)
 
 static struct bt_uuid_128 BLE_CUSTOM_SERVICE_UUID =
-    BT_UUID_INIT_128(BT_UUID_128_ENCODE(0x11111111, 0x2222, 0x3333, 0x4444, 0x000000000001ULL));
+    BT_UUID_INIT_128(BT_UUID_128_ENCODE(0x11111111, 0x2222, 0x3333, 0x4444, 0x000000000001));
 
 static struct bt_uuid_128 BLE_CUSTOM_CHARACTERISTIC_UUID =
-    BT_UUID_INIT_128(BT_UUID_128_ENCODE(0x11111111, 0x2222, 0x3333, 0x4444, 0x000000000002ULL));
+    BT_UUID_INIT_128(BT_UUID_128_ENCODE(0x11111111, 0x2222, 0x3333, 0x4444, 0x000000000002));
 
 /* PROTOTYPES ----------------------------------------------------------------------------------- */
 
@@ -61,8 +56,9 @@ static bool ble_get_adv_device_name_cb(struct bt_data* data, void* user_data) {
 
   if (data->type == BT_DATA_NAME_COMPLETE || data->type == BT_DATA_NAME_SHORTENED) {
     /* Copy the name to the user data buffer */
-    memcpy(name, data->data, data->data_len);
-    name[data->data_len] = '\0'; /* Null-terminate the string */
+    size_t copy_len = MIN(data->data_len, 31);
+    memcpy(name, data->data, copy_len);
+    name[copy_len] = '\0'; /* Null-terminate the string */
     return false;                 /* Stop parsing after finding the name */
   }
 
@@ -89,11 +85,18 @@ static void ble_on_advertisement_received(const bt_addr_le_t* addr, int8_t rssi,
   printk("Device found: %s (RSSI %d) - '%s'\n", addr_str, rssi, name);
 
   /* connect only to devices in close proximity */
-  if (rssi < -40) {
+  if (rssi < -80) {
     return;
   }
 
-  if (bt_le_scan_stop()) {
+  if (strcmp(name, "BrandonPhone") != 0) {
+    printk("Name mismatch: got '%s', expected 'BrandonPhone'\n", name);
+    return;
+  }
+
+  err = bt_le_scan_stop();
+  if (err) {
+    printk("Stop scan failed (err %d)\n", err);
     return;
   }
 
@@ -149,6 +152,7 @@ static void ble_on_device_connected(struct bt_conn* conn, uint8_t err) {
     printk("Discover failed(err %d)\n", err);
     return;
   }
+
 }
 
 static void ble_on_device_disconnected(struct bt_conn* conn, uint8_t reason) {
