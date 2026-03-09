@@ -188,6 +188,82 @@ static void update_game(void)
     if (player2_x > (SCREEN_W - PADDLE_W)) {
         player2_x = SCREEN_W - PADDLE_W;
     }
+    // Ball Movement
+    ball.x += ball.vx;
+    ball.y += ball.vy;
+
+    // Side Walls
+    if (ball.x <= 0) {
+        ball.x = 0;
+        ball.vx = -ball.vx;
+    }
+    if (ball.x >= (SCREEN_W - BALL_SIZE)) {
+        ball.x = SCREEN_W - BALL_SIZE;
+        ball.vx = -ball.vx;
+    }
+
+    int ball_center = ball.x + (BALL_SIZE / 2);
+
+    // Top paddle collision
+    if ((ball.y <= (PLAYER2_Y + PADDLE_H)) &&
+        ((ball.y + BALL_SIZE) >= PLAYER2_Y) &&
+        ((ball.x + BALL_SIZE) >= player2_x) &&
+        (ball.x <= (player2_x + PADDLE_W)) &&
+        (ball.vy < 0)) {
+
+        ball.y = PLAYER2_Y + PADDLE_H;
+        ball.vy = -ball.vy;
+
+        int offset = ball_center - (player2_x + (PADDLE_W / 2));
+        if (offset < -10) {
+            ball.vx = -3;
+        } else if (offset > 10) {
+            ball.vx = 3;
+        }
+    }
+
+    // Bottom paddle collision
+    if (((ball.y + BALL_SIZE) >= PLAYER1_Y) &&
+        (ball.y <= (PLAYER1_Y + PADDLE_H)) &&
+        ((ball.x + BALL_SIZE) >= player1_x) &&
+        (ball.x <= (player1_x + PADDLE_W)) &&
+        (ball.vy > 0)) {
+
+        ball.y = PLAYER1_Y - BALL_SIZE;
+        ball.vy = -ball.vy;
+
+        int offset = ball_center - (player1_x + (PADDLE_W / 2));
+        if (offset < -10) {
+            ball.vx = -3;
+        } else if (offset > 10) {
+            ball.vx = 3;
+        }
+    }
+
+    // Score Conditions
+    if (ball.y < 0) {
+        player1_score++;
+        update_score_labels();
+
+        if (player1_score >= WIN_SCORE) {
+            show_game_over(1);
+            return;
+        }
+
+        reset_ball(false);
+    } else if (ball.y > SCREEN_H) {
+        player2_score++;
+        update_score_labels();
+
+        if (player2_score >= WIN_SCORE) {
+            show_game_over(2);
+            return;
+        }
+
+        reset_ball(true);
+    }
+
+    update_ui_positions();
 
 }
 
