@@ -266,6 +266,71 @@ static void update_game(void)
     update_ui_positions();
 
 }
+/*----------------------------------------------------------------------------
+ * Create all LVGL objects
+ *---------------------------------------------------------------------------*/
+static void create_ui(void)
+{
+    lv_obj_t *screen = lv_screen_active();
+    lv_obj_set_style_bg_color(screen, lv_color_black(), 0);
+
+    lv_obj_t *serve_line = lv_obj_create(screen);
+    lv_obj_set_size(serve_line, 2, SCREEN_H - 60);
+    lv_obj_set_pos(serve_line, 25, 30);
+    lv_obj_set_style_bg_color(serve_line, lv_color_white(), 0);
+    lv_obj_set_style_border_width(serve_line, 0, 0);
+    lv_obj_set_style_radius(serve_line, 0, 0);
+
+    // Top score
+    player2_score_label = lv_label_create(screen);
+    lv_obj_set_style_text_color(player2_score_label, lv_color_white(), 0);
+    lv_obj_align(player2_score_label, LV_ALIGN_TOP_MID, 0, 20);
+    lv_obj_set_style_transform_rotation(player2_score_label, 1800, 0);
+
+    // Bottom score
+    player1_score_label = lv_label_create(screen);
+    lv_obj_set_style_text_color(player1_score_label, lv_color_white(), 0);
+    lv_obj_align(player1_score_label, LV_ALIGN_BOTTOM_MID, 0, -28);
+
+    // Top paddle
+    player2_paddle = lv_obj_create(screen);
+    lv_obj_set_size(player2_paddle, PADDLE_W, PADDLE_H);
+    lv_obj_set_style_bg_color(player2_paddle, lv_color_white(), 0);
+    lv_obj_set_style_border_width(player2_paddle, 0, 0);
+    lv_obj_set_style_radius(player2_paddle, 0, 0);
+
+    // Bottom paddle
+    player1_paddle = lv_obj_create(screen);
+    lv_obj_set_size(player1_paddle, PADDLE_W, PADDLE_H);
+    lv_obj_set_style_bg_color(player1_paddle, lv_palette_main(LV_PALETTE_BLUE), 0);
+    lv_obj_set_style_border_width(player1_paddle, 0, 0);
+    lv_obj_set_style_radius(player1_paddle, 0, 0);
+
+    // Ball
+    ball_obj = lv_obj_create(screen);
+    lv_obj_set_size(ball_obj, BALL_SIZE, BALL_SIZE);
+    lv_obj_set_style_bg_color(ball_obj, lv_color_white(), 0);
+    lv_obj_set_style_border_width(ball_obj, 0, 0);
+    lv_obj_set_style_radius(ball_obj, 0, 0);
+
+    // Winner label
+    winner_label = lv_label_create(screen);
+    lv_obj_set_style_text_color(winner_label, lv_palette_main(LV_PALETTE_GREEN), 0);
+    lv_obj_set_style_text_font(winner_label, &lv_font_montserrat_14, 0);
+    lv_obj_align(winner_label, LV_ALIGN_CENTER, 0, -10);
+    lv_obj_add_flag(winner_label, LV_OBJ_FLAG_HIDDEN);
+
+    // Restart label
+    restart_label = lv_label_create(screen);
+    lv_label_set_text(restart_label, "Press BTN1 to restart");
+    lv_obj_set_style_text_color(restart_label, lv_color_white(), 0);
+    lv_obj_align(restart_label, LV_ALIGN_CENTER, 0, 20);
+    lv_obj_add_flag(restart_label, LV_OBJ_FLAG_HIDDEN);
+
+    update_score_labels();
+    reset_ball(true);
+    update_ui_positions();
+}
 
 /*----------------------------------------------------------------------------
  * Main
