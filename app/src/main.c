@@ -19,7 +19,7 @@
 
 #define PADDLE_W 60
 #define PADDLE_H 10
-#define BALL_SIZE 10
+#define BALL_SIZE 16
 
 #define PLAYER1_Y (SCREEN_H - 20)
 #define PLAYER2_Y 25
@@ -62,6 +62,8 @@ static void update_score_labels(void);
 static void show_game_over(uint8_t winner);
 static void reset_match(void);
 
+// The goat
+LV_IMAGE_DECLARE(TheRealGoat);
 /*----------------------------------------------------------------------------
  * Helper: update score text
  *---------------------------------------------------------------------------*/
@@ -307,11 +309,8 @@ static void create_ui(void)
     lv_obj_set_style_radius(player1_paddle, 0, 0);
 
     // Ball
-    ball_obj = lv_obj_create(screen);
-    lv_obj_set_size(ball_obj, BALL_SIZE, BALL_SIZE);
-    lv_obj_set_style_bg_color(ball_obj, lv_color_white(), 0);
-    lv_obj_set_style_border_width(ball_obj, 0, 0);
-    lv_obj_set_style_radius(ball_obj, 0, 0);
+    ball_obj = lv_image_create(screen);
+    lv_image_set_src(ball_obj, &TheRealGoat);
 
     // Winner label
     winner_label = lv_label_create(screen);
