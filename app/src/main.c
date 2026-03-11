@@ -21,6 +21,9 @@
 #define PADDLE_H 5
 #define BALL_SIZE 16
 
+#define LAUNCHER_W 12
+#define LAUNCHER_H 24
+
 #define PLAYER1_Y (SCREEN_H - 20)
 #define PLAYER2_Y 25
 
@@ -48,6 +51,7 @@ static lv_obj_t *player2_score_label;
 static lv_obj_t *winner_label;
 static lv_obj_t *restart_label;
 static lv_obj_t *countdown_label;
+static lv_obj_t *launcher_box;
 
 /* Game state */
 static ball_t ball;
@@ -94,9 +98,9 @@ static void update_score_labels(void)
  *---------------------------------------------------------------------------*/
 static void reset_ball(bool toward_player1)
 {
-    ball.x = 60;
+    ball.x = 0;
     ball.y = (SCREEN_H - BALL_SIZE) / 2;
-    ball.vx = 3;
+    ball.vx = 6.5;
 
     if (toward_player1) {
         ball.vy = 4;
@@ -338,6 +342,14 @@ static void create_ui(void)
     lv_obj_t *screen = lv_screen_active();
     lv_obj_set_style_bg_color(screen, lv_color_black(), 0);
 
+    // Launcher box
+    launcher_box = lv_obj_create(screen);
+    lv_obj_set_size(launcher_box, LAUNCHER_W, LAUNCHER_H);
+    lv_obj_set_pos(launcher_box, 0, (SCREEN_H - LAUNCHER_H) / 2);
+    lv_obj_set_style_bg_color(launcher_box, lv_palette_main(LV_PALETTE_GREY), 0);
+    lv_obj_set_style_border_color(launcher_box, lv_color_white(), 0);
+    lv_obj_set_style_border_width(launcher_box, 1, 0);
+    lv_obj_set_style_radius(launcher_box, 0, 0);
 
     // Top score
     player2_score_label = lv_label_create(screen);
