@@ -89,6 +89,18 @@ static void update_score_labels(void)
 
     lv_label_set_text(player2_score_label, top_text);
     lv_label_set_text(player1_score_label, bottom_text);
+
+    lv_obj_update_layout(player2_score_label);
+    lv_obj_update_layout(player1_score_label);
+
+    // Bottom score: centered above Player 1 paddle
+    lv_obj_align(player1_score_label, LV_ALIGN_BOTTOM_MID, 0, -28);
+
+    lv_obj_align(player2_score_label, LV_ALIGN_TOP_MID, 0, 40);
+
+    // Rotate around the label's own center so it stays visually centered
+    lv_obj_set_style_transform_pivot_x(player2_score_label, lv_obj_get_width(player2_score_label) / 2, 0);
+    lv_obj_set_style_transform_pivot_y(player2_score_label, lv_obj_get_height(player2_score_label) / 2, 0);
 }
 
 
@@ -128,7 +140,8 @@ static void reset_match(void)
     update_score_labels();
     reset_ball(true);
     update_ui_positions();
-
+    lv_obj_set_style_transform_rotation(winner_label, 0, 0);
+    lv_obj_set_style_transform_rotation(restart_label, 0, 0);
     lv_obj_add_flag(winner_label, LV_OBJ_FLAG_HIDDEN);
     lv_obj_add_flag(restart_label, LV_OBJ_FLAG_HIDDEN);
     lv_obj_add_flag(countdown_label, LV_OBJ_FLAG_HIDDEN);
@@ -145,12 +158,45 @@ static void show_game_over(uint8_t winner)
     static char win_text[40];
 
     game_over = true;
+    round_pause = false;
+    lv_obj_add_flag(countdown_label, LV_OBJ_FLAG_HIDDEN);
 
     snprintk(win_text, sizeof(win_text), "Congrats Player %d!", winner);
     lv_label_set_text(winner_label, win_text);
+    lv_label_set_text(restart_label, "Press BTN1 to restart");
+
+    /* First make them visible */
+    lv_obj_clear_flag(winner_label, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_clear_flag(restart_label, LV_OBJ_FLAG_HIDDEN);
+
+    /* Let LVGL calculate the real size of the text */
+    lv_obj_update_layout(winner_label);
+    lv_obj_update_layout(restart_label);
+
+    if (winner == 2) {
+        lv_obj_set_style_transform_pivot_x(winner_label, lv_obj_get_width(winner_label) / 2, 0);
+        lv_obj_set_style_transform_pivot_y(winner_label, lv_obj_get_height(winner_label) / 2, 0);
+
+        lv_obj_set_style_transform_pivot_x(restart_label, lv_obj_get_width(restart_label) / 2, 0);
+        lv_obj_set_style_transform_pivot_y(restart_label, lv_obj_get_height(restart_label) / 2, 0);
+
+        // Put the text where Player 2 can read it
+        lv_obj_align(winner_label, LV_ALIGN_CENTER, 0, 10);
+        lv_obj_align(restart_label, LV_ALIGN_CENTER, 0, -20);        
+    } else {
+        lv_obj_set_style_transform_rotation(winner_label, 0, 0);
+        lv_obj_set_style_transform_rotation(restart_label, 0, 0);
+        
+        lv_obj_align(winner_label, LV_ALIGN_CENTER, 0, -10);
+        lv_obj_align(restart_label, LV_ALIGN_CENTER, 0, 20);
+    }
+
+    lv_obj_align(winner_label, LV_ALIGN_CENTER, 0, -10);
+    lv_obj_align(restart_label, LV_ALIGN_CENTER, 0, 20);
 
     lv_obj_clear_flag(winner_label, LV_OBJ_FLAG_HIDDEN);
     lv_obj_clear_flag(restart_label, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_add_flag(countdown_label, LV_OBJ_FLAG_HIDDEN);
 
     lv_obj_add_flag(player1_paddle, LV_OBJ_FLAG_HIDDEN);
     lv_obj_add_flag(player2_paddle, LV_OBJ_FLAG_HIDDEN);
@@ -354,7 +400,6 @@ static void create_ui(void)
     // Top score
     player2_score_label = lv_label_create(screen);
     lv_obj_set_style_text_color(player2_score_label, lv_color_white(), 0);
-    lv_obj_align(player2_score_label, LV_ALIGN_TOP_MID, 0, 20);
     lv_obj_set_style_transform_rotation(player2_score_label, 1800, 0);
 
     // Bottom score
