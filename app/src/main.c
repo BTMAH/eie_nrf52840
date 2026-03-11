@@ -18,7 +18,7 @@
 #define SCREEN_W 320
 #define SCREEN_H 240
 
-#define PADDLE_W 30
+#define PADDLE_W 20
 #define PADDLE_H 5
 #define BALL_SIZE 16
 
@@ -32,7 +32,9 @@
 #define FRAME_MS 16
 #define COUNTDOWN_TIME_MS 3000
 
-#define WIN_SCORE 10
+#define WIN_SCORE 5
+
+#define GAME_OVER_LED_STEP_MS 80
 
 typedef struct {
     int x;
@@ -68,6 +70,11 @@ static void update_game(void);
 static void update_score_labels(void);
 static void show_game_over(uint8_t winner);
 static void reset_match(void);
+
+static int game_over_led_index = 0;
+static int game_over_led_timer_ms = 0;
+static void all_leds_off(void);
+static void update_game_over_leds(void);
 
 static void start_round_pause(bool toward_player1);
 static void update_round_pause(void);
@@ -113,7 +120,7 @@ static void reset_ball(bool toward_player1)
 {
     ball.x = 0;
     ball.y = (SCREEN_H - BALL_SIZE) / 2;
-    ball.vx = 6.5;
+    ball.vx = 6;
 
     if (toward_player1) {
         ball.vy = 4;
@@ -137,6 +144,10 @@ static void reset_match(void)
 
     round_pause = false;
     countdown_ms = 0;
+
+    game_over_led_index = 0;
+    game_over_led_timer_ms = 0;
+    all_leds_off();
 
     update_score_labels();
     reset_ball(true);
@@ -270,6 +281,44 @@ static void show_p1_hit_leds(void)
     LED_set(LED3, LED_ON);
 }
 
+static void all_leds_off(void)
+{
+    LED_set(LED0, LED_OFF);
+    LED_set(LED1, LED_OFF);
+    LED_set(LED2, LED_OFF);
+    LED_set(LED3, LED_OFF);
+}
+
+static void update_game_over_leds(void)
+{
+    game_over_led_timer_ms += FRAME_MS;
+
+    if (game_over_led_timer_ms < GAME_OVER_LED_STEP_MS) {
+        return;
+    }
+
+    game_over_led_timer_ms = 0;
+
+    all_leds_off();
+
+    switch (game_over_led_index) {
+    case 0:
+        LED_set(LED0, LED_ON);
+        break;
+    case 1:
+        LED_set(LED1, LED_ON);
+        break;
+    case 2:
+        LED_set(LED2, LED_ON);
+        break;
+    case 3:
+        LED_set(LED3, LED_ON);
+        break;
+    }
+
+    game_over_led_index = (game_over_led_index + 1) % 4;
+}
+
 /*----------------------------------------------------------------------------
  * Main game step
  * Player 2 (top):    BTN0 left, BTN1 right
@@ -278,6 +327,8 @@ static void show_p1_hit_leds(void)
 static void update_game(void)
 {
     if (game_over) {
+
+        update_game_over_leds();
 
         if (BTN_is_pressed(BTN0)) {
             k_msleep(150);
