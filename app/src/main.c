@@ -13,6 +13,7 @@
 #include <lvgl.h>
 
 #include "BTN.h"
+#include "LED.h"
 
 #define SCREEN_W 320
 #define SCREEN_H 240
@@ -252,6 +253,23 @@ static void update_round_pause(void)
     }
 }
 
+// LED helpers
+static void show_p2_hit_leds(void)
+{
+    LED_set(LED0, LED_ON);
+    LED_set(LED1, LED_ON);
+    LED_set(LED2, LED_OFF);
+    LED_set(LED3, LED_OFF);
+}
+
+static void show_p1_hit_leds(void)
+{
+    LED_set(LED0, LED_OFF);
+    LED_set(LED1, LED_OFF);
+    LED_set(LED2, LED_ON);
+    LED_set(LED3, LED_ON);
+}
+
 /*----------------------------------------------------------------------------
  * Main game step
  * Player 2 (top):    BTN0 left, BTN1 right
@@ -326,6 +344,8 @@ static void update_game(void)
         ball.y = PLAYER2_Y + PADDLE_H;
         ball.vy = -ball.vy;
 
+        show_p2_hit_leds();
+
         int offset = ball_center - (player2_x + (PADDLE_W / 2));
         if (offset < -10) {
             ball.vx = -3;
@@ -343,6 +363,8 @@ static void update_game(void)
 
         ball.y = PLAYER1_Y - BALL_SIZE;
         ball.vy = -ball.vy;
+
+        show_p1_hit_leds();
 
         int offset = ball_center - (player1_x + (PADDLE_W / 2));
         if (offset < -10) {
@@ -470,6 +492,11 @@ int main(void)
         printk("BTN_init failed: %d\n", ret);
         return 0;
     }
+    ret = LED_init();
+    if (ret < 0) {
+    printk("LED_init failed: %d\n", ret);
+    return 0;
+}
 
     create_ui();
     display_blanking_off(display_dev);
