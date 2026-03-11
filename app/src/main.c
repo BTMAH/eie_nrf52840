@@ -17,8 +17,8 @@
 #define SCREEN_W 320
 #define SCREEN_H 240
 
-#define PADDLE_W 60
-#define PADDLE_H 10
+#define PADDLE_W 30
+#define PADDLE_H 5
 #define BALL_SIZE 16
 
 #define PLAYER1_Y (SCREEN_H - 20)
@@ -46,6 +46,7 @@ static lv_obj_t *player1_score_label;
 static lv_obj_t *player2_score_label;
 static lv_obj_t *winner_label;
 static lv_obj_t *restart_label;
+
 
 /* Game state */
 static ball_t ball;
@@ -86,12 +87,12 @@ static void reset_ball(bool toward_player1)
 {
     ball.x = 30;
     ball.y = (SCREEN_H - BALL_SIZE) / 2;
-    ball.vx = 2;
+    ball.vx = 3;
 
     if (toward_player1) {
-        ball.vy = 3;
+        ball.vy = 4;
     } else {
-        ball.vy = -3;
+        ball.vy = -4;
     }
 }
 
