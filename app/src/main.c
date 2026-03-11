@@ -26,6 +26,7 @@
 
 #define PLAYER_SPEED 10
 #define FRAME_MS 16
+#define COUNTDOWN_TIME_MS 3000
 
 #define WIN_SCORE 10
 
@@ -46,7 +47,7 @@ static lv_obj_t *player1_score_label;
 static lv_obj_t *player2_score_label;
 static lv_obj_t *winner_label;
 static lv_obj_t *restart_label;
-
+static lv_obj_t *countdown_label;
 
 /* Game state */
 static ball_t ball;
@@ -62,6 +63,12 @@ static void update_game(void);
 static void update_score_labels(void);
 static void show_game_over(uint8_t winner);
 static void reset_match(void);
+
+static void start_round_pause(bool toward_player1);
+static void update_round_pause(void);
+static bool round_pause = false;
+static int countdown_ms = 0;
+static int next_serve_toward_player1 = 1;
 
 // The goat
 LV_IMAGE_DECLARE(TheRealGoat);
@@ -80,12 +87,14 @@ static void update_score_labels(void)
     lv_label_set_text(player1_score_label, bottom_text);
 }
 
+
+
 /*----------------------------------------------------------------------------
  * Helper: reset ball
  *---------------------------------------------------------------------------*/
 static void reset_ball(bool toward_player1)
 {
-    ball.x = 30;
+    ball.x = 60;
     ball.y = (SCREEN_H - BALL_SIZE) / 2;
     ball.vx = 3;
 
@@ -95,6 +104,7 @@ static void reset_ball(bool toward_player1)
         ball.vy = -4;
     }
 }
+
 
 /*----------------------------------------------------------------------------
  * Helper: reset full match
@@ -108,12 +118,16 @@ static void reset_match(void)
     player2_x = (SCREEN_W - PADDLE_W) / 2;
     game_over = false;
 
+    round_pause = false;
+    countdown_ms = 0;
+
     update_score_labels();
     reset_ball(true);
     update_ui_positions();
 
     lv_obj_add_flag(winner_label, LV_OBJ_FLAG_HIDDEN);
     lv_obj_add_flag(restart_label, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_add_flag(countdown_label, LV_OBJ_FLAG_HIDDEN);
     lv_obj_clear_flag(player1_paddle, LV_OBJ_FLAG_HIDDEN);
     lv_obj_clear_flag(player2_paddle, LV_OBJ_FLAG_HIDDEN);
     lv_obj_clear_flag(ball_obj, LV_OBJ_FLAG_HIDDEN);
@@ -149,6 +163,45 @@ static void update_ui_positions(void)
     lv_obj_set_pos(ball_obj, ball.x, ball.y);
 }
 
+static void start_round_pause(bool toward_player1)
+{
+    round_pause = true;
+    countdown_ms = COUNTDOWN_TIME_MS;
+    next_serve_toward_player1 = toward_player1 ? 1 : 0;
+
+    player1_x = (SCREEN_W - PADDLE_W) / 2;
+    player2_x = (SCREEN_W - PADDLE_W) / 2;
+    update_ui_positions();
+
+    lv_obj_add_flag(ball_obj, LV_OBJ_FLAG_HIDDEN);
+    lv_obj_clear_flag(countdown_label, LV_OBJ_FLAG_HIDDEN);
+}
+
+static void update_round_pause(void)
+{
+    static char countdown_text[16];
+    int seconds_left;
+
+    if (!round_pause) {
+        return;
+    }
+
+    seconds_left = (countdown_ms + 999) / 1000;
+    snprintk(countdown_text, sizeof(countdown_text), "%d", seconds_left);
+    lv_label_set_text(countdown_label, countdown_text);
+
+    countdown_ms -= FRAME_MS;
+
+    if (countdown_ms <= 0) {
+        round_pause = false;
+        lv_obj_add_flag(countdown_label, LV_OBJ_FLAG_HIDDEN);
+        lv_obj_clear_flag(ball_obj, LV_OBJ_FLAG_HIDDEN);
+
+        reset_ball(next_serve_toward_player1);
+        update_ui_positions();
+    }
+}
+
 /*----------------------------------------------------------------------------
  * Main game step
  * Player 2 (top):    BTN0 left, BTN1 right
@@ -157,10 +210,16 @@ static void update_ui_positions(void)
 static void update_game(void)
 {
     if (game_over) {
+
         if (BTN_is_pressed(BTN0)) {
             k_msleep(150);
             reset_match();
         }
+        return;
+    }
+
+    if (round_pause) {
+        update_round_pause();
         return;
     }
 
@@ -253,7 +312,8 @@ static void update_game(void)
             return;
         }
 
-        reset_ball(false);
+        start_round_pause(false);
+        return;
     } else if (ball.y > SCREEN_H) {
         player2_score++;
         update_score_labels();
@@ -263,7 +323,8 @@ static void update_game(void)
             return;
         }
 
-        reset_ball(true);
+        start_round_pause(true);
+        return;
     }
 
     update_ui_positions();
@@ -277,12 +338,6 @@ static void create_ui(void)
     lv_obj_t *screen = lv_screen_active();
     lv_obj_set_style_bg_color(screen, lv_color_black(), 0);
 
-    lv_obj_t *serve_line = lv_obj_create(screen);
-    lv_obj_set_size(serve_line, 2, SCREEN_H - 60);
-    lv_obj_set_pos(serve_line, 25, 30);
-    lv_obj_set_style_bg_color(serve_line, lv_color_white(), 0);
-    lv_obj_set_style_border_width(serve_line, 0, 0);
-    lv_obj_set_style_radius(serve_line, 0, 0);
 
     // Top score
     player2_score_label = lv_label_create(screen);
@@ -326,6 +381,13 @@ static void create_ui(void)
     lv_obj_set_style_text_color(restart_label, lv_color_white(), 0);
     lv_obj_align(restart_label, LV_ALIGN_CENTER, 0, 20);
     lv_obj_add_flag(restart_label, LV_OBJ_FLAG_HIDDEN);
+
+    // Countdown label
+    countdown_label = lv_label_create(screen);
+    lv_obj_set_style_text_color(countdown_label, lv_color_white(), 0);
+    lv_obj_set_style_text_font(countdown_label, &lv_font_montserrat_14, 0);
+    lv_obj_align(countdown_label, LV_ALIGN_CENTER, 0, 0);
+    lv_obj_add_flag(countdown_label, LV_OBJ_FLAG_HIDDEN);
 
     update_score_labels();
     reset_ball(true);
